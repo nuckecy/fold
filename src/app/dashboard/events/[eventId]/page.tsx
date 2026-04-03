@@ -129,6 +129,30 @@ export default async function EventDetailPage({
         >
           Digital form
         </Link>
+        <Link
+          href={`/dashboard/events/${event.id}/scanners`}
+          className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+        >
+          Manage scanners
+        </Link>
+        <Link
+          href={`/dashboard/events/${event.id}/templates`}
+          className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+        >
+          Email templates
+        </Link>
+        <Link
+          href={`/dashboard/events/${event.id}/sequences`}
+          className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+        >
+          Email sequences
+        </Link>
+        <Link
+          href={`/dashboard/events/${event.id}/team`}
+          className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+        >
+          Team
+        </Link>
         {event.status === "active" && (
           <Link
             href={`/dashboard/events/${event.id}/scan`}
