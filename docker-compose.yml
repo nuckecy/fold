@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fold-postgres
+    environment:
+      POSTGRES_DB: fold
+      POSTGRES_USER: fld_migration_user
+      POSTGRES_PASSWORD: fold_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - fold_pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fld_migration_user -d fold"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: fold-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - fold_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  fold_pgdata:
+  fold_redis:
