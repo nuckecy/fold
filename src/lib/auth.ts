@@ -70,9 +70,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
+      }
+      // Fetch profileComplete on sign-in and token refresh
+      if (token.id && (user || trigger === "update")) {
+        const [dbUser] = await db
+          .select({ profileComplete: fldIamUsers.profileComplete })
+          .from(fldIamUsers)
+          .where(eq(fldIamUsers.id, token.id as string))
+          .limit(1);
+        token.profileComplete = dbUser?.profileComplete ?? false;
       }
       return token;
     },
@@ -80,6 +89,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token.id) {
         session.user.id = token.id as string;
       }
+      (session as any).profileComplete = token.profileComplete ?? false;
       return session;
     },
   },

@@ -9,6 +9,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { EventActions } from "@/components/event-actions";
+import { ActivityTimeline } from "@/components/activity-timeline";
 
 export default async function EventDetailPage({
   params,
@@ -115,6 +116,8 @@ export default async function EventDetailPage({
           recordCount={recordStats.total}
         />
       )}
+
+      <ActivityTimeline eventId={event.id} />
     </div>
   );
 }

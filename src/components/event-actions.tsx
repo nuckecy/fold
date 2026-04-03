@@ -31,6 +31,26 @@ export function EventActions({
 
   const available = transitions[currentStatus] || [];
   const canDelete = recordCount < 4 && currentStatus === "active";
+  const canDuplicate = currentStatus !== "hibernated";
+
+  async function handleDuplicate() {
+    setError("");
+    setLoading("duplicate");
+
+    const res = await fetch(`/api/events/${eventId}/duplicate`, {
+      method: "POST",
+    });
+
+    const data = await res.json();
+    setLoading(null);
+
+    if (!res.ok) {
+      setError(data.error || "Failed to duplicate event");
+      return;
+    }
+
+    router.push(`/dashboard/events/${data.id}`);
+  }
 
   async function handleTransition(target: string) {
     setError("");
@@ -85,6 +105,16 @@ export function EventActions({
       )}
 
       <div className="flex flex-wrap gap-2">
+        {canDuplicate && (
+          <button
+            onClick={handleDuplicate}
+            disabled={loading !== null}
+            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+          >
+            {loading === "duplicate" ? "Duplicating..." : "Duplicate event"}
+          </button>
+        )}
+
         {available.map(({ label, target, variant }) => (
           <button
             key={target}

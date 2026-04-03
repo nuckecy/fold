@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { fldEvtEvents, fldEvtMembers, fldEvtRecords } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
+import { logActivity } from "@/services/activity-log";
 
 // GET /api/events/:eventId — Get event details
 export async function GET(
@@ -139,6 +140,19 @@ export async function PATCH(
     .where(eq(fldEvtEvents.id, eventId))
     .returning();
 
+  const logType = body.status ? "event_status_changed" : "event_updated";
+  const logDesc = body.status
+    ? `Changed event status to "${body.status}"`
+    : `Updated event fields`;
+
+  await logActivity({
+    eventId,
+    actionType: logType,
+    actorUserId: session.user.id,
+    description: logDesc,
+    metadata: body.status ? { from: body.status, to: updated.status } : updates,
+  });
+
   return NextResponse.json(updated);
 }
 
@@ -184,7 +198,21 @@ export async function DELETE(
     );
   }
 
+  // Fetch title for audit log before deleting
+  const [event] = await db
+    .select({ title: fldEvtEvents.title })
+    .from(fldEvtEvents)
+    .where(eq(fldEvtEvents.id, eventId))
+    .limit(1);
+
   await db.delete(fldEvtEvents).where(eq(fldEvtEvents.id, eventId));
+
+  await logActivity({
+    actionType: "event_deleted",
+    actorUserId: session.user.id,
+    description: `Deleted event "${event?.title}"`,
+    metadata: { eventId, recordCount: count },
+  });
 
   return NextResponse.json({ message: "Event deleted" });
 }

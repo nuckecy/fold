@@ -18,8 +18,9 @@ export default auth((req) => {
     return Response.redirect(signInUrl);
   }
 
-  // Redirect authenticated users away from auth pages
-  if (isLoggedIn && isAuthPage) {
+  // Redirect authenticated users away from auth pages (except profile completion)
+  const isProfileCompletion = req.nextUrl.pathname === "/auth/complete-profile";
+  if (isLoggedIn && isAuthPage && !isProfileCompletion) {
     return Response.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 });

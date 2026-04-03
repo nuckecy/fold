@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { fldEvtEvents, fldEvtMembers } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { logActivity } from "@/services/activity-log";
 
 // GET /api/events — List events for the current user
 export async function GET() {
@@ -70,6 +71,14 @@ export async function POST(request: Request) {
     invitationMethod: "creator",
     status: "active",
     joinedAt: new Date(),
+  });
+
+  await logActivity({
+    eventId: event.id,
+    actionType: "event_created",
+    actorUserId: session.user.id,
+    description: `Created event "${title}"`,
+    metadata: { primaryLanguage, secondaryLanguage, expectedAttendeesMin, expectedAttendeesMax },
   });
 
   return NextResponse.json(event, { status: 201 });
