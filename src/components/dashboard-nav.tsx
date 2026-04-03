@@ -14,6 +14,8 @@ interface NavProps {
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/events", label: "Events" },
+  { href: "/dashboard/gdpr", label: "GDPR" },
+  { href: "/dashboard/admin", label: "Admin" },
   { href: "/dashboard/settings", label: "Settings" },
 ];
 
