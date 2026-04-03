@@ -14,6 +14,7 @@ interface NavProps {
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/events", label: "Events" },
+  { href: "/dashboard/settings", label: "Settings" },
 ];
 
 export function DashboardNav({ user }: NavProps) {
