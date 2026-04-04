@@ -35,7 +35,7 @@ export default function RegisterPage() {
       <div style={{ width: "100%", maxWidth: 400, display: "flex", flexDirection: "column", gap: "var(--fold-space-5)", padding: "var(--fold-space-6) 0" }}>
 
         <h1 style={{ fontSize: "var(--fold-type-title2)", fontWeight: 600, color: "var(--fold-text-primary)", textAlign: "center" }}>
-          Finish signing up
+          Register
         </h1>
 
         {error && (
@@ -45,22 +45,22 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-5)" }}>
-          {/* Name group */}
+          {/* Name + Email + Password grouped */}
           <div className="input-group">
             <div className="input-wrapper">
               <label className="input-label">Full name</label>
               <input type="text" required value={form.name} onChange={(e) => update("name", e.target.value)} className="input-field" placeholder="John Doe" />
             </div>
-          </div>
-          <p style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-secondary)", marginTop: -12 }}>
-            Make sure it matches the name on your government ID.
-          </p>
-
-          {/* Email */}
-          <div className="input-group">
             <div className="input-wrapper">
               <label className="input-label">Email</label>
               <input type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} className="input-field" placeholder="you@example.com" />
+            </div>
+            <div className="input-wrapper">
+              <label className="input-label">Password</label>
+              <input type={showPassword ? "text" : "password"} required minLength={8} value={form.password} onChange={(e) => update("password", e.target.value)} className="input-field" style={{ paddingRight: 48 }} placeholder="At least 8 characters" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--fold-text-secondary)", padding: 4 }}>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
@@ -92,17 +92,6 @@ export default function RegisterPage() {
                 <option value="CH">Switzerland</option>
               </select>
               <ChevronDown size={16} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "var(--fold-text-secondary)", pointerEvents: "none" }} />
-            </div>
-          </div>
-
-          {/* Password */}
-          <div className="input-group">
-            <div className="input-wrapper">
-              <label className="input-label">Password</label>
-              <input type={showPassword ? "text" : "password"} required minLength={8} value={form.password} onChange={(e) => update("password", e.target.value)} className="input-field" style={{ paddingRight: 48 }} placeholder="At least 8 characters" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--fold-text-secondary)", padding: 4 }}>
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
           </div>
 
