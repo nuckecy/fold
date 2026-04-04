@@ -95,7 +95,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <Button type="submit" loading={loading}>Agree and continue</Button>
+          <Button type="submit" loading={loading}>Register</Button>
         </form>
 
         {/* Divider */}
