@@ -17,9 +17,9 @@ export default async function CaptureLayout({
   if (!session) redirect("/auth/signin?callbackUrl=/capture");
 
   return (
-    <div className="flex justify-center min-h-screen bg-neutral-100 dark:bg-neutral-950">
-      {/* Mobile shell — max 430px on desktop, full width on mobile */}
-      <div className="relative flex flex-col w-full max-w-[430px] min-h-screen bg-white dark:bg-neutral-900 shadow-xl">
+    <div className="flex items-center justify-center min-h-screen bg-neutral-100 dark:bg-neutral-950">
+      {/* Mobile shell — max 430px, 90vh on desktop, full screen on mobile */}
+      <div className="relative flex flex-col w-full max-w-[430px] h-screen md:h-[90vh] md:rounded-2xl bg-white dark:bg-neutral-900 shadow-xl overflow-hidden">
         {/* Top header */}
         <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
           <span className="text-lg font-bold tracking-tight">Fold Capture</span>
