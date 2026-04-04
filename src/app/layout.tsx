@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Fold",
   description: "Event-based document intelligence and follow-up platform",
+  themeColor: "#1E3A5F",
+  other: {
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
