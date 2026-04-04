@@ -7,24 +7,24 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ─── Colors: Neutrals ──────────────────────────────────────────────── */
-  --fold-text-primary: #222222;
-  --fold-text-secondary: #717171;
-  --fold-text-tertiary: #B0B0B0;
+  /* ─── Colors: Neutrals (Coolors: 463F3A / 8A817C / BCB8B1 / F4F3EE) ── */
+  --fold-text-primary: #463F3A;
+  --fold-text-secondary: #8A817C;
+  --fold-text-tertiary: #BCB8B1;
   --fold-text-inverse: #FFFFFF;
 
   --fold-bg: #FFFFFF;
-  --fold-bg-secondary: #F7F7F7;
-  --fold-bg-grouped: #F2F2F7;
+  --fold-bg-secondary: #F4F3EE;
+  --fold-bg-grouped: #F4F3EE;
 
-  --fold-divider: #EBEBEB;
-  --fold-border: #DDDDDD;
-  --fold-disabled: #DDDDDD;
+  --fold-divider: #E2DFD9;
+  --fold-border: #BCB8B1;
+  --fold-disabled: #BCB8B1;
 
-  /* ─── Colors: Brand Accent ──────────────────────────────────────────── */
-  --fold-accent: #E63254;
-  --fold-accent-hover: #CC2B4A;
-  --fold-accent-light: #FDE8ED;
+  /* ─── Colors: Brand Accent (Coolors: E0AFA0) ───────────────────────── */
+  --fold-accent: #E0AFA0;
+  --fold-accent-hover: #D49A89;
+  --fold-accent-light: #F5E8E4;
 
   /* ─── Colors: Status (inline only, never backgrounds) ───────────────── */
   --fold-success: #2E7D4F;
@@ -37,8 +37,8 @@
   --fold-info-light: rgba(74, 127, 181, 0.1);
 
   /* ─── Colors: Interactive ───────────────────────────────────────────── */
-  --fold-focus-ring: rgba(74, 127, 181, 0.3);
-  --fold-press: rgba(0, 0, 0, 0.04);
+  --fold-focus-ring: rgba(224, 175, 160, 0.4);
+  --fold-press: rgba(70, 63, 58, 0.04);
 
   /* ─── Typography ────────────────────────────────────────────────────── */
   --fold-font: -apple-system, "Inter", "SF Pro Display", system-ui, sans-serif;
@@ -75,15 +75,15 @@
 
   /* ─── Legacy compat (used by existing pages) ────────────────────────── */
   --background: #ffffff;
-  --foreground: #222222;
-  --app-bg: #F2F2F7;
-  --brand: #E63254;
-  --brand-hover: #CC2B4A;
-  --brand-light: #FDE8ED;
-  --separator: #EBEBEB;
-  --text-primary: #222222;
-  --text-secondary: #717171;
-  --surface-grouped: #F2F2F7;
+  --foreground: #463F3A;
+  --app-bg: #F4F3EE;
+  --brand: #E0AFA0;
+  --brand-hover: #D49A89;
+  --brand-light: #F5E8E4;
+  --separator: #E2DFD9;
+  --text-primary: #463F3A;
+  --text-secondary: #8A817C;
+  --surface-grouped: #F4F3EE;
   --foreground-inverse: #FFFFFF;
 }
 
@@ -113,7 +113,7 @@ body {
   gap: var(--fold-space-2);
   width: 100%;
   height: 50px;
-  background: var(--fold-accent);
+  background: var(--fold-text-primary);
   color: var(--fold-text-inverse);
   border-radius: var(--fold-radius-md);
   font-size: var(--fold-type-callout);
