@@ -4,6 +4,7 @@ import { fldEvtEvents, fldEvtMembers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { Camera, ChevronRight } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function CaptureScanListPage() {
   const session = await auth();
@@ -19,55 +20,33 @@ export default async function CaptureScanListPage() {
 
   return (
     <div style={{ minHeight: "100%" }}>
-      <div style={{ padding: "16px 20px" }}>
-        <h1 style={{ fontSize: "var(--font-title)", fontWeight: 700, color: "var(--text-primary)" }}>
-          Scan
-        </h1>
-        <p style={{ fontSize: "var(--font-body-sm)", color: "var(--text-secondary)", marginTop: 4 }}>
-          Select an event to start scanning cards.
-        </p>
+      <div style={{ padding: "var(--fold-space-4) var(--fold-space-5)" }}>
+        <h1 style={{ fontSize: "var(--fold-type-title3)", fontWeight: 700, color: "var(--fold-text-primary)", letterSpacing: "-0.02em" }}>Scan</h1>
+        <p style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)", marginTop: "var(--fold-space-1)" }}>Select an event to start scanning cards.</p>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 20px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-2)", padding: "0 var(--fold-space-5)" }}>
         {activeEvents.length === 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "60px 20px", textAlign: "center" }}>
-            <Camera size={40} color="var(--text-secondary)" />
-            <p style={{ fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>
-              No active events to scan.
-            </p>
-            <Link href="/capture/events/new" className="btn-primary" style={{ width: "auto", padding: "0 24px" }}>
-              Create an event
-            </Link>
-          </div>
+          <EmptyState icon={Camera} title="No active events" description="Create an event to start scanning." action={{ label: "Create event", href: "/capture/events/new" }} />
         ) : (
           activeEvents.map(({ event }) => (
-            <Link
-              key={event.id}
-              href={`/capture/events/${event.id}/scan`}
-              className="card"
-              style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 4, background: "var(--brand-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Camera size={20} color="var(--brand)" />
+            <Link key={event.id} href={`/capture/events/${event.id}/scan`} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-3)", textDecoration: "none" }}>
+              <div style={{ width: 40, height: 40, borderRadius: "var(--fold-radius-sm)", background: "var(--fold-accent-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Camera size={20} color="var(--fold-accent)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "var(--font-body-lg)", fontWeight: 600, color: "var(--text-primary)" }}>
-                  {event.title}
-                </div>
-                <div style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)" }}>
-                  {event.date}
-                </div>
+                <div style={{ fontSize: "var(--fold-type-headline)", fontWeight: 600, color: "var(--fold-text-primary)" }}>{event.title}</div>
+                <div style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-secondary)" }}>{event.date}</div>
               </div>
-              <ChevronRight size={16} color="var(--text-secondary)" />
+              <ChevronRight size={14} color="var(--fold-text-tertiary)" />
             </Link>
           ))
         )}
       </div>
 
-      {/* Join session link */}
-      <div style={{ padding: "24px 20px", textAlign: "center" }}>
-        <Link href="/scan" style={{ fontSize: "var(--font-body-sm)", color: "var(--brand)", textDecoration: "none", fontWeight: 500 }}>
-          Join someone else's scanning session
+      <div style={{ padding: "var(--fold-space-6) var(--fold-space-5)", textAlign: "center" }}>
+        <Link href="/scan" style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-accent)", textDecoration: "underline", fontWeight: 500 }}>
+          Join someone else's session
         </Link>
       </div>
     </div>

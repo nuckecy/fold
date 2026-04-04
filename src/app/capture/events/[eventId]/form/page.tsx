@@ -2,8 +2,9 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Copy, Check } from "lucide-react";
+import { Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 interface FormSettings { exists: boolean; shortCode?: string; formUrl?: string; }
 
@@ -32,74 +33,56 @@ export default function CaptureFormPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  if (loading) return <div style={{ padding: 20, fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>Loading...</div>;
+  if (loading) return <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%", padding: "var(--fold-space-5)" }}><p style={{ color: "var(--fold-text-secondary)" }}>Loading...</p></div>;
 
   return (
-    <div style={{ background: "var(--app-bg)", minHeight: "100%" }}>
-      <div className="page-header">
-        <Link href={`/capture/events/${eventId}`} style={{ textDecoration: "none" }}>
-          <ArrowLeft size={20} color="var(--text-primary)" />
-        </Link>
-        <span className="title">Online form</span>
-      </div>
+    <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
+      <PageHeader title="Online form" back={`/capture/events/${eventId}`} />
 
       {!settings?.exists ? (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "60px 20px", textAlign: "center" }}>
-          <p style={{ fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>Create a digital form so attendees can submit online.</p>
-          <button onClick={createForm} disabled={creating} className="btn-primary" style={{ width: "auto", padding: "0 32px" }}>
-            {creating ? "Creating..." : "Create form"}
-          </button>
+        <div style={{ padding: "var(--fold-space-10) var(--fold-space-5)", textAlign: "center", display: "flex", flexDirection: "column", gap: "var(--fold-space-4)", alignItems: "center" }}>
+          <p style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>Create a digital form so attendees can submit online.</p>
+          <Button onClick={createForm} loading={creating} style={{ width: "auto", padding: "0 var(--fold-space-8)" }}>Create form</Button>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "16px 20px" }}>
-          {/* QR Code placeholder */}
-          <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
-            <div style={{ width: 160, height: 160, background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-4)", padding: "var(--fold-space-4) var(--fold-space-5)" }}>
+          {/* QR Code */}
+          <div style={{ display: "flex", justifyContent: "center", padding: "var(--fold-space-6) 0" }}>
+            <div style={{ width: 160, height: 160, background: "var(--fold-bg)", border: "0.5px solid var(--fold-divider)", borderRadius: "var(--fold-radius-sm)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--fold-shadow-card)" }}>
               <img src={`/api/events/${eventId}/form/qr?format=png`} alt="QR Code" style={{ width: 140, height: 140 }} />
             </div>
           </div>
 
           {/* URL */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            <span style={{ fontSize: "var(--font-body-sm)", color: "var(--text-secondary)", fontFamily: "monospace" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--fold-space-2)" }}>
+            <span style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)", fontFamily: "monospace" }}>
               {settings.formUrl?.replace("http://localhost:3000", "foldapp.com")}
             </span>
-            <button onClick={copyUrl} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}>
-              {copied ? <Check size={14} color="var(--success)" /> : <Copy size={14} />}
+            <button onClick={copyUrl} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fold-text-secondary)", padding: 4 }}>
+              {copied ? <Check size={14} color="var(--fold-success)" /> : <Copy size={14} />}
             </button>
           </div>
 
-          {/* Download buttons */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-            <a href={`/api/events/${eventId}/form/qr?format=png`} download className="btn-ghost" style={{ width: "auto", height: 36, padding: "0 20px", fontSize: "var(--font-body-sm)" }}>
-              PNG
-            </a>
-            <a href={`/api/events/${eventId}/form/qr?format=svg`} download className="btn-ghost" style={{ width: "auto", height: 36, padding: "0 20px", fontSize: "var(--font-body-sm)" }}>
-              SVG
-            </a>
+          {/* Downloads */}
+          <div style={{ display: "flex", justifyContent: "center", gap: "var(--fold-space-2)" }}>
+            <a href={`/api/events/${eventId}/form/qr?format=png`} download className="btn-text" style={{ fontSize: "var(--fold-type-subhead)" }}>PNG</a>
+            <a href={`/api/events/${eventId}/form/qr?format=svg`} download className="btn-text" style={{ fontSize: "var(--fold-type-subhead)" }}>SVG</a>
           </div>
 
           {/* Metrics */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, padding: "16px 0" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: "var(--fold-space-6)", padding: "var(--fold-space-4) 0" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "var(--font-subtitle)", fontWeight: 600, color: "var(--text-primary)" }}>0</div>
-              <div style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)" }}>submissions</div>
+              <div style={{ fontSize: "var(--fold-type-title3)", fontWeight: 600, color: "var(--fold-text-primary)", fontVariantNumeric: "tabular-nums" }}>0</div>
+              <div style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-text-secondary)" }}>submissions</div>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "var(--font-subtitle)", fontWeight: 600, color: "var(--text-primary)" }}>0%</div>
-              <div style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)" }}>conversion</div>
+              <div style={{ fontSize: "var(--fold-type-title3)", fontWeight: 600, color: "var(--fold-text-primary)" }}>0%</div>
+              <div style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-text-secondary)" }}>conversion</div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <a href={settings.formUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
-              Preview form
-            </a>
-            <button className="btn-ghost">
-              Close form
-            </button>
-          </div>
+          <Button variant="secondary" onClick={() => window.open(settings.formUrl, "_blank")}>Preview form</Button>
+          <Button variant="ghost">Close form</Button>
         </div>
       )}
     </div>

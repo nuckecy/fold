@@ -2,8 +2,11 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Camera, Info } from "lucide-react";
+import { Camera, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
 
 interface FieldData { id: string; fieldName: string; label: string; value: string | null; confidence: string | null; }
 interface RecordData { record: { id: string; captureMethod: string; status: string; imageUrl: string | null; defectiveReasons: string[]; }; fields: FieldData[]; editHistory: any[]; }
@@ -34,26 +37,33 @@ export default function CaptureRecordDetailPage() {
     router.push(`/capture/events/${eventId}/records?status=defective`);
   }
 
-  if (loading || !data) return <div style={{ padding: 20, fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>Loading...</div>;
+  if (loading || !data) {
+    return (
+      <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
+        <PageHeader title="Record" back={`/capture/events/${eventId}/records?status=defective`} />
+        <div style={{ padding: "var(--fold-space-10)", textAlign: "center" }}>
+          <p style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   const { record, fields } = data;
 
   return (
-    <div style={{ background: "var(--app-bg)", minHeight: "100%" }}>
-      {/* Header */}
-      <div className="page-header">
-        <Link href={`/capture/events/${eventId}/records?status=defective`} style={{ textDecoration: "none" }}>
-          <ArrowLeft size={20} color="var(--text-primary)" />
-        </Link>
-        <span className="title">Record #{recordId.slice(0, 7).toUpperCase()}</span>
-        {record.status === "defective" && <span className="badge">!</span>}
-      </div>
+    <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
+      <PageHeader
+        title={`Record #${recordId.slice(0, 7).toUpperCase()}`}
+        back={`/capture/events/${eventId}/records?status=defective`}
+        badge={record.status === "defective" ? 1 : undefined}
+      />
 
-      <div style={{ padding: "0 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ padding: "0 var(--fold-space-5)", display: "flex", flexDirection: "column", gap: "var(--fold-space-4)" }}>
         {/* Image preview */}
         {record.imageUrl && (
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 4, height: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
-            <Camera size={24} color="var(--text-secondary)" />
-            <span style={{ fontSize: "var(--font-body-sm)", color: "var(--text-secondary)" }}>Tap to expand</span>
+          <div style={{ background: "var(--fold-bg-secondary)", border: "0.5px solid var(--fold-divider)", borderRadius: "var(--fold-radius-md)", height: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--fold-space-1)" }}>
+            <Camera size={24} color="var(--fold-text-tertiary)" />
+            <span style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-tertiary)" }}>Tap to expand</span>
           </div>
         )}
 
@@ -67,58 +77,42 @@ export default function CaptureRecordDetailPage() {
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <label className="input-label" style={{ marginBottom: 0 }}>{field.label}</label>
                 {confidenceLabel && (
-                  <span style={{
-                    fontSize: "var(--font-caption)",
-                    fontWeight: 500,
-                    color: field.confidence === "high" ? "var(--success)" : field.confidence === "low" ? "var(--error)" : "var(--warning)",
-                  }}>
+                  <Badge variant={field.confidence === "high" ? "success" : field.confidence === "low" ? "error" : "warning"}>
                     {confidenceLabel}
-                  </span>
+                  </Badge>
                 )}
               </div>
-              <input
-                type="text"
+              <Input
                 value={editValues[field.id] || ""}
                 onChange={(e) => setEditValues({ ...editValues, [field.id]: e.target.value })}
-                className="input-field"
-                style={{
-                  borderColor: isError ? "var(--error)" : undefined,
-                  background: isError ? "var(--error-light)" : undefined,
-                }}
+                error={isError ? `${field.label} is missing` : undefined}
               />
-              {isError && (
-                <span style={{ fontSize: "var(--font-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
-                  {field.label} is missing
-                </span>
-              )}
             </div>
           );
         })}
 
         {/* Info callout */}
         {fields.some((f) => f.fieldName?.includes("phone") && f.value) && (
-          <div style={{ display: "flex", gap: 12, background: "var(--info-light)", padding: 16, borderRadius: 4 }}>
-            <Info size={20} color="var(--info)" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ display: "flex", gap: "var(--fold-space-3)", background: "var(--fold-info-light)", padding: "var(--fold-space-4)", borderRadius: "var(--fold-radius-sm)" }}>
+            <Info size={20} color="var(--fold-info)" style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
-              <div style={{ fontSize: "var(--font-body)", fontWeight: 600, color: "var(--text-primary)" }}>Phone available</div>
-              <div style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)" }}>This person can be reached by phone</div>
+              <div style={{ fontSize: "var(--fold-type-body)", fontWeight: 600, color: "var(--fold-text-primary)" }}>Phone available</div>
+              <div style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-secondary)" }}>This person can be reached by phone</div>
             </div>
           </div>
         )}
 
-        {/* Save button */}
-        <button onClick={handleSave} disabled={saving} className="btn-primary">
-          {saving ? "Saving..." : "Save and resolve"}
-        </button>
+        {/* Actions */}
+        <Button onClick={handleSave} loading={saving}>Save and resolve</Button>
 
-        {/* Skip link */}
-        <div style={{ textAlign: "center", paddingBottom: 24 }}>
-          <Link
-            href={`/capture/events/${eventId}/records?status=defective`}
-            style={{ fontSize: "var(--font-body-sm)", color: "var(--text-secondary)", textDecoration: "none" }}
+        <div style={{ textAlign: "center", paddingBottom: "var(--fold-space-6)" }}>
+          <button
+            onClick={() => router.push(`/capture/events/${eventId}/records?status=defective`)}
+            className="btn-text"
+            style={{ color: "var(--fold-text-secondary)" }}
           >
             Skip for now
-          </Link>
+          </button>
         </div>
       </div>
     </div>
