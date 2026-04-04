@@ -319,6 +319,26 @@ Map each observed color to a `--fold-*` CSS custom property with:
 
 ---
 
+## Step 7: Font & Typography Extraction
+
+Extract the complete typography system observed across all screenshots.
+
+### Extract:
+- **Font family** — What typeface is used, its characteristics (geometric, humanist, serif, etc.)
+- **Type scale** — Every distinct size observed with its weight, line-height, letter-spacing, and functional role
+- **Weight usage rules** — Exactly which weights appear and when each is used vs. avoided
+- **Number typography** — How numbers are treated (tabular figures, stat displays, prices)
+- **Button text** — Size, weight, case, spacing for each button variant
+- **Input text** — Value, placeholder, label, error, helper text specifications
+- **Typography principles** — Rules governing the system (minimum size, weight hierarchy, case rules, line-height)
+
+### Provide Fold Adaptation:
+- Complete CSS custom properties for font family, type scale, weights, line-heights, and letter-spacing
+- Specific rules for church context (accessibility for wide age range, extended use readability)
+- Input size requirements (16px+ to prevent iOS auto-zoom)
+
+---
+
 ## Output Format
 
 Deliver all outputs as markdown files inside a `design-docs/` folder at the project root:
@@ -333,6 +353,7 @@ Deliver all outputs as markdown files inside a `design-docs/` folder at the proj
 9. `implementation-roadmap.md` — The phased implementation plan from Step 4d
 10. `design-patterns.md` — The pattern library from Step 5
 11. `color-extraction.md` — The color extraction from Step 6
+12. `font-extraction.md` — The typography extraction from Step 7
 
 ---
 
