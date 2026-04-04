@@ -65,7 +65,7 @@ function SignInForm() {
             </div>
           </div>
 
-          <Button type="submit" loading={loading}>Continue</Button>
+          <Button type="submit" loading={loading}>Login</Button>
         </form>
 
         {/* Divider */}
