@@ -33,6 +33,11 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <meta name="theme-color" content="#1E3A5F" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body className="min-h-full flex flex-col font-sans" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         <Providers>{children}</Providers>
       </body>
