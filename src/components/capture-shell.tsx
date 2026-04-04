@@ -42,7 +42,7 @@ export function CaptureShell({
         flexShrink: 0,
       }}
     >
-      <span style={{ fontSize: "var(--fold-type-title2)", fontWeight: 700, color: "var(--fold-accent)", letterSpacing: "-0.03em" }}>
+      <span style={{ fontSize: "var(--fold-type-title2)", fontWeight: 700, color: "var(--fold-text-primary)", letterSpacing: "-0.03em" }}>
         Fold
       </span>
       <div

@@ -43,7 +43,7 @@ export function CaptureNav() {
               alignItems: "center",
               gap: 1,
               textDecoration: "none",
-              color: isActive ? "var(--info)" : "var(--text-tertiary)",
+              color: isActive ? "var(--fold-accent)" : "var(--fold-text-tertiary)",
               padding: "6px 0",
               WebkitTapHighlightColor: "transparent",
             }}

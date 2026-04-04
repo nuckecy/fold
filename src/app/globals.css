@@ -7,38 +7,38 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ─── Colors: Neutrals (Coolors: 283618 / 606C38 / FEFAE0) ──────────── */
-  --fold-text-primary: #283618;
-  --fold-text-secondary: #606C38;
-  --fold-text-tertiary: #8A9462;
-  --fold-text-inverse: #FEFAE0;
+  /* ─── Colors: Minimal (black + white + gray + one accent) ────────────── */
+  --fold-text-primary: #222222;
+  --fold-text-secondary: #717171;
+  --fold-text-tertiary: #B0B0B0;
+  --fold-text-inverse: #FFFFFF;
 
   --fold-bg: #FFFFFF;
-  --fold-bg-secondary: #FEFAE0;
-  --fold-bg-grouped: #FBF7D9;
+  --fold-bg-secondary: #F7F7F7;
+  --fold-bg-grouped: #F7F7F7;
 
-  --fold-divider: #E8E2C0;
-  --fold-border: #D4CC9E;
-  --fold-disabled: #C5BF9A;
+  --fold-divider: #EBEBEB;
+  --fold-border: #DDDDDD;
+  --fold-disabled: #DDDDDD;
 
-  /* ─── Colors: Brand Accent (Coolors: DDA15E / BC6C25) ──────────────── */
+  /* ─── Accent: Sandy brown (used sparingly) ──────────────────────────── */
   --fold-accent: #DDA15E;
-  --fold-accent-hover: #BC6C25;
-  --fold-accent-light: #F5E8D4;
+  --fold-accent-hover: #C4873A;
+  --fold-accent-light: #FDF6ED;
 
-  /* ─── Colors: Status (inline only, never backgrounds) ───────────────── */
-  --fold-success: #2E7D4F;
-  --fold-success-light: rgba(46, 125, 79, 0.1);
+  /* ─── Status ────────────────────────────────────────────────────────── */
+  --fold-success: #222222;
+  --fold-success-light: rgba(34, 34, 34, 0.06);
   --fold-error: #C0392B;
-  --fold-error-light: rgba(192, 57, 43, 0.1);
-  --fold-warning: #C68A1D;
-  --fold-warning-light: rgba(198, 138, 29, 0.1);
-  --fold-info: #4A7FB5;
-  --fold-info-light: rgba(74, 127, 181, 0.1);
+  --fold-error-light: rgba(192, 57, 43, 0.08);
+  --fold-warning: #DDA15E;
+  --fold-warning-light: rgba(221, 161, 94, 0.1);
+  --fold-info: #717171;
+  --fold-info-light: rgba(113, 113, 113, 0.08);
 
-  /* ─── Colors: Interactive ───────────────────────────────────────────── */
-  --fold-focus-ring: rgba(96, 108, 56, 0.35);
-  --fold-press: rgba(40, 54, 24, 0.05);
+  /* ─── Interactive ───────────────────────────────────────────────────── */
+  --fold-focus-ring: rgba(34, 34, 34, 0.15);
+  --fold-press: rgba(0, 0, 0, 0.04);
 
   /* ─── Typography ────────────────────────────────────────────────────── */
   --fold-font: -apple-system, "Inter", "SF Pro Display", system-ui, sans-serif;
@@ -73,18 +73,18 @@
   --fold-shadow-elevated: 0 4px 12px rgba(0,0,0,0.08);
   --fold-shadow-float: 0 8px 24px rgba(0,0,0,0.12);
 
-  /* ─── Legacy compat (used by existing pages) ────────────────────────── */
-  --background: #ffffff;
-  --foreground: #283618;
-  --app-bg: #FBF7D9;
+  /* ─── Legacy compat ──────────────────────────────────────────────────── */
+  --background: #FFFFFF;
+  --foreground: #222222;
+  --app-bg: #F7F7F7;
   --brand: #DDA15E;
-  --brand-hover: #BC6C25;
-  --brand-light: #F5E8D4;
-  --separator: #E8E2C0;
-  --text-primary: #283618;
-  --text-secondary: #606C38;
-  --surface-grouped: #FBF7D9;
-  --foreground-inverse: #FEFAE0;
+  --brand-hover: #C4873A;
+  --brand-light: #FDF6ED;
+  --separator: #EBEBEB;
+  --text-primary: #222222;
+  --text-secondary: #717171;
+  --surface-grouped: #F7F7F7;
+  --foreground-inverse: #FFFFFF;
 }
 
 @theme inline {
@@ -113,8 +113,8 @@ body {
   gap: var(--fold-space-2);
   width: 100%;
   height: 50px;
-  background: #283618;
-  color: #FEFAE0;
+  background: #222222;
+  color: #FFFFFF;
   border-radius: var(--fold-radius-md);
   font-size: var(--fold-type-callout);
   font-weight: 600;

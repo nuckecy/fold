@@ -4,8 +4,8 @@
   "description": "Capture attendee data from events",
   "start_url": "/capture",
   "display": "standalone",
-  "background_color": "#FEFAE0",
-  "theme_color": "#283618",
+  "background_color": "#FFFFFF",
+  "theme_color": "#222222",
   "orientation": "portrait",
   "scope": "/",
   "icons": [
