@@ -23,8 +23,8 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--fold-bg)", padding: "0 var(--fold-space-8)" }}>
-      <div style={{ width: "100%", maxWidth: 393, display: "flex", flexDirection: "column", gap: "var(--fold-space-8)" }}>
+    <div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--fold-bg)", padding: "0 var(--fold-space-8)", overflow: "hidden", position: "fixed", inset: 0 }}>
+      <div style={{ width: "100%", maxWidth: 393, display: "flex", flexDirection: "column", gap: "var(--fold-space-6)" }}>
         <h1 style={{ fontSize: "var(--fold-type-title1)", fontWeight: 700, color: "var(--fold-accent)", letterSpacing: "-0.03em" }}>Fold</h1>
 
         <div>
