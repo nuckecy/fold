@@ -15,60 +15,62 @@ export default async function CaptureLayout({
   const session = await auth();
   if (!session) redirect("/auth/signin?callbackUrl=/capture");
 
+  const initials = (session.user.name || "U")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <>
       {/* Desktop: iPhone device frame */}
-      <div className="hidden md:flex fixed inset-0 items-center justify-center bg-neutral-200 dark:bg-neutral-950">
-        {/* Device bezel */}
-        <div className="relative w-[393px] h-[852px] bg-black rounded-[3rem] p-[12px] shadow-2xl">
-          {/* Dynamic Island notch */}
-          <div className="absolute top-[18px] left-1/2 -translate-x-1/2 w-[126px] h-[37px] bg-black rounded-full z-50" />
+      <div className="hidden md:flex" style={{ position: "fixed", inset: 0, alignItems: "center", justifyContent: "center", background: "#E5E5EA" }}>
+        <div style={{ position: "relative", width: 393, height: 852, background: "#000", borderRadius: "3rem", padding: 12, boxShadow: "0 25px 50px rgba(0,0,0,0.25)" }}>
+          {/* Dynamic Island */}
+          <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", width: 126, height: 37, background: "#000", borderRadius: 9999, zIndex: 50 }} />
 
           {/* Screen */}
-          <div className="relative w-full h-full bg-white dark:bg-neutral-900 rounded-[2.4rem] overflow-hidden flex flex-col">
-            {/* Status bar spacer */}
-            <div className="h-[54px] shrink-0" />
+          <div style={{ position: "relative", width: "100%", height: "100%", background: "var(--app-bg)", borderRadius: "2.4rem", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ height: 54, flexShrink: 0 }} />
 
-            {/* App header */}
-            <header className="flex items-center justify-between px-5 py-2.5 border-b border-neutral-200 dark:border-neutral-800">
-              <span className="text-[17px] font-bold tracking-tight">Fold Capture</span>
-              <div className="text-[11px] text-neutral-500 truncate max-w-[120px]">
-                {session.user.name || session.user.email}
+            {/* TopBar */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "var(--bg)", flexShrink: 0 }}>
+              <span style={{ fontSize: "var(--font-heading)", fontWeight: 600, color: "var(--brand)" }}>Fold</span>
+              <div style={{ width: 32, height: 32, borderRadius: 9999, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--foreground-inverse)", fontSize: "var(--font-caption)", fontWeight: 600 }}>
+                {initials}
               </div>
-            </header>
+            </div>
 
-            {/* Content */}
-            <main className="flex-1 px-5 py-4 pb-20 overflow-y-auto">
+            <main style={{ flex: 1, overflowY: "auto", paddingBottom: 0 }}>
               {children}
             </main>
 
-            {/* Bottom nav */}
-            <div className="shrink-0">
+            <div style={{ flexShrink: 0 }}>
               <CaptureNav />
             </div>
 
-            {/* Home indicator */}
-            <div className="flex justify-center py-2 shrink-0">
-              <div className="w-[134px] h-[5px] bg-neutral-300 dark:bg-neutral-700 rounded-full" />
+            <div style={{ display: "flex", justifyContent: "center", padding: "8px 0", background: "var(--bg)", flexShrink: 0 }}>
+              <div style={{ width: 134, height: 5, background: "#D1D5DB", borderRadius: 9999 }} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile: full-screen native feel */}
-      <div className="md:hidden flex flex-col min-h-screen bg-white dark:bg-neutral-900">
-        <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
-          <span className="text-lg font-bold tracking-tight">Fold Capture</span>
-          <div className="text-xs text-neutral-500 truncate max-w-[150px]">
-            {session.user.name || session.user.email}
+      {/* Mobile: full-screen */}
+      <div className="md:hidden" style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "var(--app-bg)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "var(--bg)", flexShrink: 0 }}>
+          <span style={{ fontSize: "var(--font-heading)", fontWeight: 600, color: "var(--brand)" }}>Fold</span>
+          <div style={{ width: 32, height: 32, borderRadius: 9999, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--foreground-inverse)", fontSize: "var(--font-caption)", fontWeight: 600 }}>
+            {initials}
           </div>
-        </header>
+        </div>
 
-        <main className="flex-1 px-4 py-4 pb-20 overflow-y-auto">
+        <main style={{ flex: 1, overflowY: "auto", paddingBottom: 72 }}>
           {children}
         </main>
 
-        <div className="fixed bottom-0 left-0 right-0">
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0 }}>
           <CaptureNav />
         </div>
       </div>

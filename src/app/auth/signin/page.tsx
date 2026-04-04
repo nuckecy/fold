@@ -4,36 +4,24 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import Link from "next/link";
-
-type Mode = "password" | "magic-link";
+import { Eye, EyeOff } from "lucide-react";
 
 function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || "/capture";
   const registered = searchParams.get("registered");
-  const magicError = searchParams.get("error");
 
-  const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(
-    magicError === "invalid_link"
-      ? "This sign-in link is invalid."
-      : magicError === "expired_link"
-        ? "This sign-in link has expired. Please request a new one."
-        : ""
-  );
-  const [success, setSuccess] = useState(
-    registered ? "Account created. Please sign in." : ""
-  );
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [success] = useState(registered ? "Account created. Please sign in." : "");
   const [loading, setLoading] = useState(false);
-  const [magicSent, setMagicSent] = useState(false);
 
-  async function handlePasswordSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess("");
     setLoading(true);
 
     const result = await signIn("credentials", {
@@ -51,181 +39,90 @@ function SignInForm() {
     }
   }
 
-  async function handleMagicLinkSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
-
-    const res = await fetch("/api/auth/magic-link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-
-    setLoading(false);
-
-    if (!res.ok) {
-      setError("Failed to send magic link");
-      return;
-    }
-
-    setMagicSent(true);
-    setSuccess("If an account exists with this email, a sign-in link has been sent. Check your inbox.");
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Fold</h1>
-          <p className="mt-2 text-sm text-neutral-500">
-            Sign in to your account
-          </p>
-        </div>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-            {error}
-          </div>
-        )}
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)", padding: "0 32px" }}>
+      <div style={{ width: "100%", maxWidth: 393, display: "flex", flexDirection: "column", gap: 32 }}>
+        {/* Wordmark */}
+        <h1 style={{ fontSize: "var(--font-heading)", fontWeight: 700, color: "var(--brand)", fontFamily: "'Inter', sans-serif" }}>
+          Fold
+        </h1>
 
         {success && (
-          <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+          <div style={{ background: "var(--success-light)", padding: 12, borderRadius: 4, fontSize: "var(--font-body-sm)", color: "var(--success)" }}>
             {success}
           </div>
         )}
 
-        {/* Mode tabs */}
-        <div className="flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => { setMode("password"); setMagicSent(false); setError(""); setSuccess(""); }}
-            className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-              mode === "password"
-                ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                : "hover:bg-neutral-50 dark:hover:bg-neutral-800"
-            }`}
-          >
-            Password
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode("magic-link"); setError(""); setSuccess(""); }}
-            className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-              mode === "magic-link"
-                ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                : "hover:bg-neutral-50 dark:hover:bg-neutral-800"
-            }`}
-          >
-            Magic link
-          </button>
-        </div>
+        {error && (
+          <div style={{ background: "var(--error-light)", padding: 12, borderRadius: 4, fontSize: "var(--font-body-sm)", color: "var(--error)" }}>
+            {error}
+          </div>
+        )}
 
-        {mode === "password" ? (
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-                placeholder="you@example.com"
-              />
-            </div>
+        {/* Form fields */}
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div>
+            <label className="input-label">Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input-field"
+              placeholder="you@example.com"
+            />
+          </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
-                Password
-              </label>
+          <div>
+            <label className="input-label">Password</label>
+            <div style={{ position: "relative" }}>
               <input
-                id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-                placeholder="Enter your password"
+                className="input-field"
+                style={{ paddingRight: 44 }}
+                placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <button type="submit" disabled={loading} className="btn-primary">
+              {loading ? "Signing in..." : "Log in"}
+            </button>
 
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+              type="button"
+              onClick={() => signIn("google", { callbackUrl })}
+              className="btn-secondary"
             >
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-          </form>
-        ) : magicSent ? (
-          <div className="text-center py-4">
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Check your email for the sign-in link.
-            </p>
-            <button
-              onClick={() => { setMagicSent(false); setSuccess(""); }}
-              className="mt-4 text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
-            >
-              Send another link
+              Continue with Google
             </button>
           </div>
-        ) : (
-          <form onSubmit={handleMagicLinkSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="magic-email" className="block text-sm font-medium mb-1">
-                Email
-              </label>
-              <input
-                id="magic-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-                placeholder="you@example.com"
-              />
-            </div>
+        </form>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
-            >
-              {loading ? "Sending link..." : "Send magic link"}
-            </button>
-          </form>
-        )}
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-neutral-300 dark:border-neutral-700" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-background px-2 text-neutral-500">or</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => signIn("google", { callbackUrl })}
-          className="w-full rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
-        >
-          Continue with Google
-        </button>
-
-        <p className="text-center text-sm text-neutral-500">
-          Do not have an account?{" "}
-          <Link
-            href="/auth/register"
-            className="font-medium text-neutral-900 hover:underline dark:text-neutral-100"
-          >
-            Register
+        {/* Links */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          <Link href="/auth/forgot-password" style={{ fontSize: "var(--font-body-sm)", color: "var(--brand)", textDecoration: "none" }}>
+            Forgot password?
           </Link>
-        </p>
+          <span style={{ fontSize: "var(--font-body-sm)", color: "var(--text-secondary)" }}>
+            No account?{" "}
+            <Link href="/auth/register" style={{ color: "var(--brand)", textDecoration: "none", fontWeight: 500 }}>
+              Create one
+            </Link>
+          </span>
+        </div>
       </div>
     </div>
   );
