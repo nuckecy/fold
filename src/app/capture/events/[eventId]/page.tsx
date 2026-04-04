@@ -3,8 +3,16 @@ import { db } from "@/db";
 import { fldEvtEvents, fldEvtMembers, fldEvtRecords } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Camera, Share2, AlertTriangle, Monitor, ChevronRight } from "lucide-react";
+import { Camera, Share2, AlertTriangle, Monitor } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { MetricCard } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ListGroup, ListRow } from "@/components/ui/list-group";
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+}
 
 export default async function CaptureEventPage({
   params,
@@ -36,60 +44,35 @@ export default async function CaptureEventPage({
     .from(fldEvtRecords)
     .where(eq(fldEvtRecords.eventId, eventId));
 
-  const actions = [
-    { icon: Camera, label: "Continue scanning", href: `/capture/events/${eventId}/scan` },
-    { icon: Share2, label: "Share online form", href: `/capture/events/${eventId}/form` },
-    { icon: AlertTriangle, label: "View flagged records", href: `/capture/events/${eventId}/records?status=defective`, badge: stats.defective > 0 ? stats.defective : undefined },
-    { icon: Monitor, label: "Open in dashboard", href: `/dashboard/events/${eventId}` },
-  ];
-
   return (
-    <div style={{ background: "var(--app-bg)", minHeight: "100%" }}>
-      {/* Page header */}
-      <div className="page-header">
-        <Link href="/capture" style={{ textDecoration: "none" }}>
-          <span className="back"><ArrowLeft size={20} color="var(--text-primary)" /></span>
-        </Link>
-        <span className="title" style={{ flex: 1 }}>{event.title}</span>
-        {stats.defective > 0 && <span className="badge">{stats.defective}</span>}
-      </div>
+    <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
+      <PageHeader title={event.title} back="/capture" badge={stats.defective > 0 ? stats.defective : undefined} />
 
-      {/* Date */}
-      <div style={{ padding: "0 20px", marginBottom: 16 }}>
-        <span style={{ fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>
-          {event.date}
+      {/* Date + status */}
+      <div style={{ padding: "0 var(--fold-space-5)", marginBottom: "var(--fold-space-4)", display: "flex", alignItems: "center", gap: "var(--fold-space-2)" }}>
+        <span style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>
+          {formatDate(event.date)}
         </span>
+        <Badge variant={event.status === "active" ? "success" : "muted"}>
+          {event.status}
+        </Badge>
       </div>
 
-      {/* Metrics row */}
-      <div style={{ display: "flex", gap: 12, padding: "0 20px", marginBottom: 24 }}>
-        <div className="metric-card" style={{ flex: 1 }}>
-          <span className="value">{stats.total}</span>
-          <span className="label">records</span>
-        </div>
-        <div className="metric-card" style={{ flex: 1 }}>
-          <span className="value">{stats.scans}/{stats.digital}</span>
-          <span className="label">scan/digital</span>
-        </div>
-        <div className="metric-card" style={{ flex: 1 }}>
-          <span className="value" style={{ color: stats.defective > 0 ? "var(--error)" : undefined }}>{stats.defective}</span>
-          <span className="label">flagged</span>
-        </div>
+      {/* Metrics */}
+      <div style={{ display: "flex", gap: "var(--fold-space-3)", padding: "0 var(--fold-space-5)", marginBottom: "var(--fold-space-6)" }}>
+        <MetricCard value={stats.total} label="records" />
+        <MetricCard value={`${stats.scans}/${stats.digital}`} label="scan/digital" />
+        <MetricCard value={stats.defective} label="flagged" valueColor={stats.defective > 0 ? "var(--fold-error)" : undefined} />
       </div>
 
-      {/* Action rows */}
-      <div style={{ padding: "0 20px" }}>
-        {actions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <Link key={action.label} href={action.href} className="action-row" style={{ textDecoration: "none" }}>
-              <Icon size={20} className="icon" />
-              <span className="text">{action.label}</span>
-              {action.badge && <span className="badge" style={{ background: "var(--error)", color: "var(--foreground-inverse)", fontSize: "var(--font-caption)", fontWeight: 600, padding: "2px 8px", borderRadius: 9999 }}>{action.badge}</span>}
-              <ChevronRight size={16} className="chevron" />
-            </Link>
-          );
-        })}
+      {/* Actions */}
+      <div style={{ padding: "0 var(--fold-space-5)" }}>
+        <ListGroup>
+          <ListRow icon={<Camera size={20} />} label="Continue scanning" href={`/capture/events/${eventId}/scan`} />
+          <ListRow icon={<Share2 size={20} />} label="Share online form" href={`/capture/events/${eventId}/form`} />
+          <ListRow icon={<AlertTriangle size={20} />} label="View flagged records" href={`/capture/events/${eventId}/records?status=defective`} />
+          <ListRow icon={<Monitor size={20} />} label="Open in dashboard" href={`/dashboard/events/${eventId}`} />
+        </ListGroup>
       </div>
     </div>
   );
