@@ -65,6 +65,7 @@ export function CaptureShell({
           alignItems: "center",
           justifyContent: "center",
           background: "linear-gradient(135deg, #E8ECF0 0%, #D5DAE0 100%)",
+          overflow: "hidden",
         }}
       >
         <div
@@ -109,7 +110,17 @@ export function CaptureShell({
           >
             <div style={{ height: 54, flexShrink: 0 }} />
             {header}
-            <main style={{ flex: 1, overflowY: "auto" }}>{children}</main>
+            <main
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                overflowX: "hidden",
+                overscrollBehavior: "contain",
+                minHeight: 0,
+              }}
+            >
+              {children}
+            </main>
             <div style={{ flexShrink: 0 }}>
               <CaptureNav />
             </div>
@@ -143,12 +154,24 @@ export function CaptureShell({
       style={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh",
+        height: "100vh",
+        overflow: "hidden",
         background: "#F2F2F7",
       }}
     >
-      <div style={{ position: "sticky", top: 0, zIndex: 40 }}>{header}</div>
-      <main style={{ flex: 1, paddingBottom: 60 }}>{children}</main>
+      <div style={{ flexShrink: 0, zIndex: 40 }}>{header}</div>
+      <main
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          overscrollBehavior: "contain",
+          minHeight: 0,
+          paddingBottom: 56,
+        }}
+      >
+        {children}
+      </main>
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40 }}>
         <CaptureNav />
       </div>
