@@ -65,14 +65,12 @@ export default function RegisterPage() {
             <option value="CH">Switzerland</option>
           </Select>
 
-          <div>
+          <div className="input-wrapper">
             <label className="input-label">Password</label>
-            <div style={{ position: "relative" }}>
-              <input type={showPassword ? "text" : "password"} required minLength={8} value={form.password} onChange={(e) => update("password", e.target.value)} className="input-field" style={{ paddingRight: 44 }} placeholder="At least 8 characters" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--fold-text-secondary)", padding: 4 }}>
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
+            <input type={showPassword ? "text" : "password"} required minLength={8} value={form.password} onChange={(e) => update("password", e.target.value)} className="input-field" style={{ paddingRight: 48 }} placeholder="At least 8 characters" />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--fold-text-secondary)", padding: 4 }}>
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-3)", marginTop: "var(--fold-space-2)" }}>

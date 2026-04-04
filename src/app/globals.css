@@ -184,43 +184,129 @@ body {
   text-decoration: none;
 }
 
-/* ═══ INPUTS ═════════════════════════════════════════════════════════════ */
+/* ═══ INPUTS (Airbnb: outlined, label inside, stacked groups) ═══════════ */
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
 
 .input-field {
   width: 100%;
-  height: 52px;
-  padding: 0 var(--fold-space-4);
-  border: none;
+  height: 58px;
+  padding: 26px 16px 8px;
+  border: 1px solid var(--fold-border);
   border-radius: var(--fold-radius-sm);
   font-size: var(--fold-type-body);
   font-family: var(--fold-font);
   color: var(--fold-text-primary);
-  background: var(--fold-bg-secondary);
+  background: var(--fold-bg);
   outline: none;
-  transition: box-shadow 200ms ease;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
 }
-.input-field:focus { box-shadow: 0 0 0 3px var(--fold-focus-ring); }
+.input-field:focus {
+  border-color: var(--fold-text-primary);
+  box-shadow: 0 0 0 1px var(--fold-text-primary);
+}
 .input-field::placeholder { color: var(--fold-text-tertiary); }
-.input-field.error { box-shadow: 0 0 0 2px var(--fold-error); }
+.input-field.error {
+  border-color: var(--fold-error);
+  box-shadow: 0 0 0 1px var(--fold-error);
+}
 
+/* Label floats inside the field */
 .input-label {
-  display: block;
-  font-size: var(--fold-type-footnote);
-  font-weight: 400;
+  position: absolute;
+  top: 10px;
+  left: 16px;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--fold-text-secondary);
-  margin-bottom: 6px;
   font-family: var(--fold-font);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Grouped inputs — stacked in one bordered container */
+.input-group {
+  border: 1px solid var(--fold-border);
+  border-radius: var(--fold-radius-sm);
+  overflow: hidden;
+}
+.input-group .input-wrapper + .input-wrapper {
+  border-top: 1px solid var(--fold-border);
+}
+.input-group .input-field {
+  border: none;
+  border-radius: 0;
+}
+.input-group .input-field:focus {
+  box-shadow: none;
+  background: var(--fold-bg-secondary);
 }
 
 textarea.input-field {
   height: auto;
-  padding: var(--fold-space-3) var(--fold-space-4);
+  min-height: 100px;
+  padding: 26px 16px 12px;
   resize: vertical;
 }
 
 select.input-field {
   appearance: none;
-  padding-right: 36px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+/* Social / OAuth buttons (Airbnb: outlined, icon left, full width) */
+.btn-oauth {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 50px;
+  background: var(--fold-bg);
+  color: var(--fold-text-primary);
+  border-radius: var(--fold-radius-sm);
+  font-size: var(--fold-type-callout);
+  font-weight: 600;
+  font-family: var(--fold-font);
+  border: 1px solid var(--fold-text-primary);
+  cursor: pointer;
+  transition: transform 100ms ease-out, background 100ms ease;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+  padding: 0 16px;
+  position: relative;
+}
+.btn-oauth .btn-oauth-icon {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  left: 20px;
+}
+.btn-oauth .btn-oauth-text {
+  flex: 1;
+  text-align: center;
+}
+.btn-oauth:active { transform: scale(0.98); background: var(--fold-bg-secondary); }
+
+/* "or" divider line */
+.divider-text {
+  display: flex;
+  align-items: center;
+  gap: var(--fold-space-4);
+  padding: var(--fold-space-5) 0;
+}
+.divider-text::before,
+.divider-text::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--fold-divider);
+}
+.divider-text span {
+  font-size: var(--fold-type-footnote);
+  color: var(--fold-text-secondary);
 }
 
 /* ═══ CARDS ══════════════════════════════════════════════════════════════ */
