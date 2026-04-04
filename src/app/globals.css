@@ -22,9 +22,9 @@
   --fold-disabled: #DDDDDD;
 
   /* ─── Colors: Brand Accent ──────────────────────────────────────────── */
-  --fold-accent: #1E3A5F;
-  --fold-accent-hover: #162D4A;
-  --fold-accent-light: #EEF2F7;
+  --fold-accent: #FF385C;
+  --fold-accent-hover: #E0294D;
+  --fold-accent-light: #FFF0F3;
 
   /* ─── Colors: Status (inline only, never backgrounds) ───────────────── */
   --fold-success: #2E7D4F;
@@ -77,9 +77,9 @@
   --background: #ffffff;
   --foreground: #222222;
   --app-bg: #F2F2F7;
-  --brand: #1E3A5F;
-  --brand-hover: #162D4A;
-  --brand-light: #EEF2F7;
+  --brand: #FF385C;
+  --brand-hover: #E0294D;
+  --brand-light: #FFF0F3;
   --separator: #EBEBEB;
   --text-primary: #222222;
   --text-secondary: #717171;

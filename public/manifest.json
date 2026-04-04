@@ -5,7 +5,7 @@
   "start_url": "/capture",
   "display": "standalone",
   "background_color": "#F2F2F7",
-  "theme_color": "#1E3A5F",
+  "theme_color": "#FF385C",
   "orientation": "portrait",
   "scope": "/",
   "icons": [
