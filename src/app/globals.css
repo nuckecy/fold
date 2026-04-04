@@ -244,7 +244,6 @@ body {
 .input-group .input-field:focus {
   box-shadow: none;
   background: #FFFFFF;
-  background: var(--fold-bg-secondary);
 }
 
 textarea.input-field {
