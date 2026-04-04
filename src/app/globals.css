@@ -210,6 +210,15 @@ body {
   background: #FFFFFF;
 }
 .input-field::placeholder { color: var(--fold-text-tertiary); }
+.input-field:-webkit-autofill,
+.input-field:-webkit-autofill:hover,
+.input-field:-webkit-autofill:focus,
+.input-field:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #FFFFFF inset !important;
+  -webkit-text-fill-color: var(--fold-text-primary) !important;
+  background-color: #FFFFFF !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
 .input-field.error {
   border-color: var(--fold-error);
   box-shadow: 0 0 0 1px var(--fold-error);
