@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // standalone output for Docker/Coolify only, not Vercel
+  ...(process.env.DOCKER_BUILD === "1" ? { output: "standalone" as const } : {}),
   // N11, N13: Security headers
   async headers() {
     return [
