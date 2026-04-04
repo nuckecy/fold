@@ -207,6 +207,7 @@ body {
 .input-field:focus {
   border-color: var(--fold-text-primary);
   box-shadow: 0 0 0 1px var(--fold-text-primary);
+  background: #FFFFFF;
 }
 .input-field::placeholder { color: var(--fold-text-tertiary); }
 .input-field.error {
@@ -242,6 +243,7 @@ body {
 }
 .input-group .input-field:focus {
   box-shadow: none;
+  background: #FFFFFF;
   background: var(--fold-bg-secondary);
 }
 
