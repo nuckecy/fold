@@ -2,12 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, Minus, Plus } from "lucide-react";
 
 export default function CaptureNewEventPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     title: "",
     date: "",
+    description: "",
+    expectedAttendeesMin: 50,
+    expectedAttendeesMax: 200,
     primaryLanguage: "en",
   });
   const [error, setError] = useState("");
@@ -36,57 +41,90 @@ export default function CaptureNewEventPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">New Event</h1>
+    <div style={{ background: "var(--bg)", minHeight: "100%" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px" }}>
+        <Link href="/capture" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+          <ArrowLeft size={20} color="var(--text-primary)" />
+        </Link>
+        <span style={{ fontSize: "var(--font-subtitle)", fontWeight: 600, color: "var(--text-primary)" }}>New event</span>
+        <span style={{ fontSize: "var(--font-body-sm)", color: "var(--text-secondary)" }}>1 of 3</span>
+      </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div style={{ margin: "0 20px 16px", background: "var(--error-light)", padding: 12, borderRadius: 4, fontSize: "var(--font-body-sm)", color: "var(--error)" }}>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Form */}
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20, padding: "0 20px" }}>
         <div>
-          <label className="block text-sm font-medium mb-1">Event title</label>
-          <input
-            type="text"
-            required
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            placeholder="e.g. Sunday Service"
-          />
+          <label className="input-label">Title</label>
+          <input type="text" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="input-field" placeholder="e.g. Easter Sunday Service" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Event date</label>
-          <input
-            type="date"
-            required
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          />
+          <label className="input-label">Date</label>
+          <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Language</label>
-          <select
-            value={form.primaryLanguage}
-            onChange={(e) => setForm({ ...form, primaryLanguage: e.target.value })}
-            className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          >
-            <option value="en">English</option>
-            <option value="de">German</option>
-          </select>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+            <label className="input-label" style={{ marginBottom: 0 }}>Description</label>
+            <span style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)" }}>Optional</span>
+          </div>
+          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" rows={3} placeholder="Brief description of the event" />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
-        >
-          {loading ? "Creating..." : "Create event"}
+        {/* Expected attendees */}
+        <div>
+          <label className="input-label">Expected attendees</label>
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: "var(--font-label)", color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Min</span>
+              <input type="number" min={0} value={form.expectedAttendeesMin} onChange={(e) => setForm({ ...form, expectedAttendeesMin: parseInt(e.target.value) || 0 })} className="input-field" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: "var(--font-label)", color: "var(--text-secondary)", marginBottom: 4, display: "block" }}>Max</span>
+              <input type="number" min={0} value={form.expectedAttendeesMax} onChange={(e) => setForm({ ...form, expectedAttendeesMax: parseInt(e.target.value) || 0 })} className="input-field" />
+            </div>
+          </div>
+        </div>
+
+        {/* Language */}
+        <div>
+          <label className="input-label">Language</label>
+          <div style={{ display: "flex", gap: 0, border: "1px solid var(--border)", borderRadius: 4, overflow: "hidden" }}>
+            {[
+              { value: "en", label: "English" },
+              { value: "de", label: "German" },
+              { value: "both", label: "Both" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setForm({ ...form, primaryLanguage: opt.value })}
+                style={{
+                  flex: 1,
+                  padding: "10px 0",
+                  background: form.primaryLanguage === opt.value ? "var(--brand-light)" : "var(--bg)",
+                  color: form.primaryLanguage === opt.value ? "var(--brand)" : "var(--text-secondary)",
+                  border: "none",
+                  borderRight: opt.value !== "both" ? "1px solid var(--border)" : "none",
+                  fontSize: "var(--font-body-sm)",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: 8 }}>
+          {loading ? "Creating..." : "Next"}
         </button>
       </form>
     </div>

@@ -3,6 +3,7 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { ArrowLeft, Check, X, AlertTriangle, Phone } from "lucide-react";
 
 interface RecordField { fieldName: string; label: string; value: string | null; confidence: string | null; }
 interface EventRecord { id: string; captureMethod: string; status: string; defectiveReasons: string[]; createdAt: string; fields: RecordField[]; }
@@ -15,79 +16,92 @@ function RecordsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/events/${eventId}/records?status=${status}`)
-      .then((r) => r.json())
-      .then((d) => { setRecords(d); setLoading(false); });
+    fetch(`/api/events/${eventId}/records?status=${status}`).then((r) => r.json()).then((d) => { setRecords(d); setLoading(false); });
   }, [eventId, status]);
 
-  if (loading) return <div className="text-sm text-neutral-500">Loading...</div>;
+  if (loading) return <div style={{ padding: 20, fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>Loading...</div>;
+
+  // Get name and email from fields
+  function getField(record: EventRecord, name: string) {
+    return record.fields.find((f) => f.fieldName?.includes(name))?.value || null;
+  }
+
+  const filters = [
+    { key: "all", label: `All (${records.length})` },
+    { key: "defective", label: `Missing email` },
+    { key: "captured", label: `Malformed` },
+  ];
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Link href={`/capture/events/${eventId}`} className="text-sm text-neutral-500">&larr; Back</Link>
-        <h1 className="text-xl font-bold mt-1">
-          {status === "defective" ? "Flagged Records" : "Records"}
-        </h1>
-        <p className="text-xs text-neutral-500">{records.length} record{records.length !== 1 ? "s" : ""}</p>
+    <div style={{ background: "var(--app-bg)", minHeight: "100%" }}>
+      {/* Header */}
+      <div className="page-header">
+        <Link href={`/capture/events/${eventId}`} style={{ textDecoration: "none" }}>
+          <ArrowLeft size={20} color="var(--text-primary)" />
+        </Link>
+        <span className="title">Flagged records</span>
+        {records.length > 0 && <span className="badge">{records.length}</span>}
       </div>
 
       {/* Filter pills */}
-      <div className="flex gap-2 overflow-x-auto">
-        {["defective", "captured", "reviewed", "all"].map((s) => (
+      <div style={{ display: "flex", gap: 8, padding: "0 20px 16px", overflowX: "auto" }}>
+        {filters.map((f) => (
           <Link
-            key={s}
-            href={`/capture/events/${eventId}/records?status=${s === "all" ? "" : s}`}
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
-              status === s || (s === "all" && !status)
-                ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
-            }`}
+            key={f.key}
+            href={`/capture/events/${eventId}/records?status=${f.key === "all" ? "" : f.key}`}
+            className={`status-pill ${status === f.key || (f.key === "all" && !status) ? "brand" : "muted"}`}
+            style={{ textDecoration: "none", whiteSpace: "nowrap", padding: "6px 14px" }}
           >
-            {s === "all" ? "All" : s}
+            {f.label}
           </Link>
         ))}
       </div>
 
-      {records.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500 dark:border-neutral-700">
-          No {status} records.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {records.map((r) => (
-            <Link
-              key={r.id}
-              href={`/capture/events/${eventId}/records/${r.id}`}
-              className="block rounded-xl border border-neutral-200 p-3 active:bg-neutral-50 dark:border-neutral-800"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                  r.status === "defective" ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                  : r.status === "reviewed" ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                  : "bg-neutral-100 text-neutral-500 dark:bg-neutral-800"
-                }`}>{r.status}</span>
-                <span className="text-xs text-neutral-400">{r.captureMethod}</span>
-              </div>
-              {r.fields.slice(0, 3).map((f, i) => (
-                <div key={i} className="text-xs">
-                  <span className="text-neutral-500">{f.label}: </span>
-                  <span>{f.value || "—"}</span>
+      {/* Record cards */}
+      <div style={{ padding: "0 20px" }}>
+        {records.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px 0" }}>
+            <p style={{ fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>No flagged records.</p>
+          </div>
+        ) : (
+          records.map((r) => {
+            const contactName = getField(r, "name") || "Contact Name";
+            const email = getField(r, "email");
+            const phone = getField(r, "phone");
+            const emailOk = email && !r.defectiveReasons.some((d) => d.includes("email"));
+
+            return (
+              <Link
+                key={r.id}
+                href={`/capture/events/${eventId}/records/${r.id}`}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  padding: "14px 0",
+                  borderBottom: "1px solid var(--border-light)",
+                  textDecoration: "none",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "var(--font-body)", fontWeight: 600, color: "var(--text-primary)" }}>{contactName}</span>
+                  <span style={{ fontSize: "var(--font-body-sm)", color: "var(--success)", fontWeight: 500 }}>Valid</span>
                 </div>
-              ))}
-              {r.defectiveReasons?.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {(r.defectiveReasons as string[]).map((reason, i) => (
-                    <span key={i} className="text-xs bg-red-50 text-red-600 rounded px-1.5 py-0.5 dark:bg-red-900/20 dark:text-red-400">
-                      {reason.replace(/_/g, " ")}
-                    </span>
-                  ))}
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "var(--font-body-sm)", color: emailOk ? "var(--text-secondary)" : "var(--error)" }}>
+                  {emailOk ? <Check size={12} /> : <X size={12} />}
+                  <span>{email || "No email captured"}</span>
                 </div>
-              )}
-            </Link>
-          ))}
-        </div>
-      )}
+                {phone && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "var(--font-body-sm)", color: "var(--text-secondary)" }}>
+                    <Phone size={12} />
+                    <span>{phone}</span>
+                  </div>
+                )}
+              </Link>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

@@ -1,14 +1,13 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useRef, useState } from "react";
+import { Upload } from "lucide-react";
 
 type Phase = "join" | "scanning";
 
 export default function ScannerJoinPage() {
   const { code } = useParams<{ code: string }>();
-  const router = useRouter();
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,240 +20,108 @@ export default function ScannerJoinPage() {
   const [eventId, setEventId] = useState("");
   const [scanCount, setScanCount] = useState(0);
   const [cameraActive, setCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [lastStatus, setLastStatus] = useState("");
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    const res = await fetch("/api/scan/join", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, email }),
-    });
-
+    const res = await fetch("/api/scan/join", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, email }) });
     const data = await res.json();
     setLoading(false);
-
-    if (!res.ok) {
-      setError(data.error || "Failed to join");
-      return;
-    }
-
+    if (!res.ok) { setError(data.error || "Failed to join"); return; }
     setSessionToken(data.sessionToken);
     setEventId(data.eventId);
     setPhase("scanning");
   }
 
   async function startCamera() {
-    setCameraError("");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setCameraActive(true);
-      }
-    } catch {
-      setCameraError("Could not access camera. Use gallery upload instead.");
-    }
-  }
-
-  function stopCamera() {
-    if (videoRef.current?.srcObject) {
-      (videoRef.current.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
-      videoRef.current.srcObject = null;
-    }
-    setCameraActive(false);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } });
+      if (videoRef.current) { videoRef.current.srcObject = stream; setCameraActive(true); }
+    } catch { /* */ }
   }
 
   async function capturePhoto() {
     if (!videoRef.current || !canvasRef.current) return;
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext("2d")?.drawImage(video, 0, 0);
-
-    canvas.toBlob(async (blob) => {
+    const v = videoRef.current, c = canvasRef.current;
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext("2d")?.drawImage(v, 0, 0);
+    c.toBlob(async (blob) => {
       if (!blob) return;
-      await uploadScan(new File([blob], `scan-${Date.now()}.jpg`, { type: "image/jpeg" }));
+      setUploading(true);
+      const fd = new FormData(); fd.append("image", new File([blob], `scan-${Date.now()}.jpg`, { type: "image/jpeg" })); fd.append("sourceDetail", `scanner_${email}`);
+      const res = await fetch(`/api/events/${eventId}/scans`, { method: "POST", body: fd });
+      if (res.ok) setScanCount((c) => c + 1);
+      setUploading(false);
     }, "image/jpeg", 0.9);
   }
 
-  async function uploadScan(file: File) {
-    setUploading(true);
-    setLastStatus("");
-
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("sourceDetail", `scanner_${email}`);
-
-    const res = await fetch(`/api/events/${eventId}/scans`, {
-      method: "POST",
-      body: formData,
-    });
-
-    setUploading(false);
-
-    if (res.ok) {
-      setScanCount((c) => c + 1);
-      setLastStatus("Captured");
-      setTimeout(() => setLastStatus(""), 1500);
-    } else {
-      setLastStatus("Upload failed");
-    }
-  }
-
-  function handleGalleryUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files) return;
-    Array.from(files).forEach((f) => uploadScan(f));
-    e.target.value = "";
-  }
-
-  // Join phase
+  // Join phase (S-1)
   if (phase === "join") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-sm space-y-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight">Fold</h1>
-            <p className="mt-2 text-sm text-neutral-500">
-              Join scanning session
-            </p>
-            <p className="mt-1 text-xs text-neutral-400">
-              Code: {code}
-            </p>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)", padding: "0 20px" }}>
+        <div style={{ width: "100%", maxWidth: 393, display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "60px 0" }}>
+          <h1 style={{ fontSize: "var(--font-heading)", fontWeight: 700, color: "var(--brand)" }}>Fold</h1>
+          <h2 style={{ fontSize: "var(--font-body-lg)", fontWeight: 600, color: "var(--text-primary)" }}>Join scanning session</h2>
+
+          {/* Event card */}
+          <div style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 4, padding: 20 }}>
+            <div style={{ fontSize: "var(--font-body-lg)", fontWeight: 600, color: "var(--text-primary)" }}>Event</div>
+            <div style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)", marginTop: 4 }}>Code: {code}</div>
           </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-              {error}
-            </div>
-          )}
+          {error && <div style={{ width: "100%", background: "var(--error-light)", padding: 12, borderRadius: 4, fontSize: "var(--font-body-sm)", color: "var(--error)" }}>{error}</div>}
 
-          <form onSubmit={handleJoin} className="space-y-4">
+          <form onSubmit={handleJoin} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
-                Your email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-                placeholder="you@example.com"
-              />
-              <p className="text-xs text-neutral-500 mt-1">
-                Required for scan attribution
-              </p>
+              <label className="input-label">Your email</label>
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="you@example.com" />
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
-            >
+            <button type="submit" disabled={loading} className="btn-primary">
               {loading ? "Joining..." : "Join session"}
             </button>
           </form>
+
+          <p style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)", textAlign: "center" }}>
+            You will only have access to scan cards for this event
+          </p>
         </div>
       </div>
     );
   }
 
-  // Scanning phase — minimal scanner UI (E8: capture only)
+  // Scanning phase — minimal scanner UI
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
-        <div className="text-lg font-bold">Fold Scanner</div>
-        <div className="text-right">
-          <div className="text-2xl font-bold tabular-nums">{scanCount}</div>
-          <div className="text-xs text-neutral-500">scans</div>
+    <div style={{ background: "#1A1A2E", height: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
+      {cameraActive ? (
+        <>
+          <video ref={videoRef} autoPlay playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <canvas ref={canvasRef} style={{ display: "none" }} />
+          <div style={{ position: "absolute", top: 226, left: 56, width: 280, height: 400, border: "2px solid rgba(255,255,255,0.3)", borderRadius: 4 }} />
+
+          <div style={{ position: "relative", zIndex: 10, display: "flex", justifyContent: "space-between", padding: "52px 16px 0" }}>
+            <span style={{ color: "rgba(255,255,255,0.9)", fontSize: "var(--font-body-lg)", fontWeight: 500 }}>Fold Scanner</span>
+            <div style={{ background: "var(--scan-accent)", padding: "4px 12px", borderRadius: 4, color: "var(--foreground-inverse)", fontSize: "var(--font-body-sm)", fontWeight: 600 }}>
+              {scanCount}
+            </div>
+          </div>
+
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 0 48px" }}>
+            <button onClick={capturePhoto} disabled={uploading} style={{ width: 72, height: 72, borderRadius: 9999, border: "3px solid rgba(255,255,255,0.8)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 56, height: 56, borderRadius: 9999, background: "rgba(255,255,255,0.9)" }} />
+            </button>
+          </div>
+        </>
+      ) : (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 32 }}>
+          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "var(--font-body-lg)" }}>Ready to scan</p>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "var(--font-body-sm)", textAlign: "center" }}>Scanning as {email}</p>
+          <button onClick={startCamera} style={{ padding: "12px 32px", background: "var(--scan-accent)", color: "var(--foreground-inverse)", border: "none", borderRadius: 9999, fontSize: "var(--font-body-lg)", fontWeight: 500, cursor: "pointer" }}>
+            Open camera
+          </button>
         </div>
-      </div>
-
-      <div className="flex-1 p-4 space-y-4">
-        {lastStatus && (
-          <div className={`rounded-md p-2 text-sm text-center ${
-            lastStatus === "Captured"
-              ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-              : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-          }`}>
-            {lastStatus}
-          </div>
-        )}
-
-        {cameraError && (
-          <div className="rounded-md bg-yellow-50 p-2 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
-            {cameraError}
-          </div>
-        )}
-
-        {cameraActive ? (
-          <div className="space-y-3">
-            <div className="relative rounded-lg overflow-hidden bg-black aspect-[4/3]">
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute inset-8 border-2 border-white/40 rounded-lg" />
-              </div>
-            </div>
-            <canvas ref={canvasRef} className="hidden" />
-            <div className="flex gap-2">
-              <button
-                onClick={capturePhoto}
-                disabled={uploading}
-                className="flex-1 rounded-md bg-neutral-900 px-4 py-4 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
-              >
-                {uploading ? "Saving..." : "Capture"}
-              </button>
-              <button
-                onClick={stopCamera}
-                className="rounded-md border border-neutral-300 px-4 py-4 text-sm dark:border-neutral-700"
-              >
-                Stop
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <button
-              onClick={startCamera}
-              className="w-full rounded-lg border-2 border-dashed border-neutral-300 p-12 text-center hover:bg-neutral-50 dark:border-neutral-700"
-            >
-              <div className="text-lg font-medium">Open Camera</div>
-              <div className="text-sm text-neutral-500 mt-1">Tap to start scanning cards</div>
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleGalleryUpload}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full rounded-lg border border-neutral-300 p-4 text-center text-sm hover:bg-neutral-50 dark:border-neutral-700"
-            >
-              Upload from gallery
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="p-4 border-t border-neutral-200 text-center text-xs text-neutral-400 dark:border-neutral-800">
-        Scanning as {email}
-      </div>
+      )}
     </div>
   );
 }

@@ -3,125 +3,124 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, Camera, Info } from "lucide-react";
 
 interface FieldData { id: string; fieldName: string; label: string; value: string | null; confidence: string | null; }
-interface RecordData { record: { id: string; captureMethod: string; status: string; imageUrl: string | null; defectiveReasons: string[]; }; fields: FieldData[]; }
+interface RecordData { record: { id: string; captureMethod: string; status: string; imageUrl: string | null; defectiveReasons: string[]; }; fields: FieldData[]; editHistory: any[]; }
 
 export default function CaptureRecordDetailPage() {
   const { eventId, recordId } = useParams<{ eventId: string; recordId: string }>();
   const router = useRouter();
   const [data, setData] = useState<RecordData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/events/${eventId}/records/${recordId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setData(d); setLoading(false);
-        const vals: Record<string, string> = {};
-        d.fields?.forEach((f: FieldData) => { vals[f.id] = f.value || ""; });
-        setEditValues(vals);
-      });
+    fetch(`/api/events/${eventId}/records/${recordId}`).then((r) => r.json()).then((d) => {
+      setData(d); setLoading(false);
+      const vals: Record<string, string> = {};
+      d.fields?.forEach((f: FieldData) => { vals[f.id] = f.value || ""; });
+      setEditValues(vals);
+    });
   }, [eventId, recordId]);
 
   async function handleSave() {
     setSaving(true);
     const changes: Record<string, string> = {};
     data?.fields?.forEach((f) => { if (editValues[f.id] !== (f.value || "")) changes[f.id] = editValues[f.id]; });
-    await fetch(`/api/events/${eventId}/records/${recordId}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fields: changes }),
-    });
-    setSaving(false); setEditing(false);
-    const d = await fetch(`/api/events/${eventId}/records/${recordId}`).then((r) => r.json());
-    setData(d);
-  }
-
-  async function handleResolve() {
-    setSaving(true);
-    await fetch(`/api/events/${eventId}/records/${recordId}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "resolved" }),
-    });
+    await fetch(`/api/events/${eventId}/records/${recordId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields: changes, status: "resolved" }) });
     setSaving(false);
     router.push(`/capture/events/${eventId}/records?status=defective`);
   }
 
-  if (loading || !data) return <div className="text-sm text-neutral-500">Loading...</div>;
+  if (loading || !data) return <div style={{ padding: 20, fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>Loading...</div>;
   const { record, fields } = data;
 
-  const dot = (c: string | null) => c === "high" ? "bg-green-500" : c === "medium" ? "bg-yellow-500" : c === "low" ? "bg-red-500" : "bg-neutral-300";
-
   return (
-    <div className="space-y-4">
-      <div>
-        <Link href={`/capture/events/${eventId}/records?status=defective`} className="text-sm text-neutral-500">&larr; Back</Link>
-        <div className="flex items-center justify-between mt-1">
-          <h1 className="text-xl font-bold">Record</h1>
-          <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${record.status === "defective" ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" : "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"}`}>{record.status}</span>
-        </div>
+    <div style={{ background: "var(--app-bg)", minHeight: "100%" }}>
+      {/* Header */}
+      <div className="page-header">
+        <Link href={`/capture/events/${eventId}/records?status=defective`} style={{ textDecoration: "none" }}>
+          <ArrowLeft size={20} color="var(--text-primary)" />
+        </Link>
+        <span className="title">Record #{recordId.slice(0, 7).toUpperCase()}</span>
+        {record.status === "defective" && <span className="badge">!</span>}
       </div>
 
-      {/* Image */}
-      {record.imageUrl && !record.imageUrl.startsWith("archived:") && (
-        <div className="rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800">
-          <img src={record.imageUrl} alt="Scan" className="w-full" />
-        </div>
-      )}
+      <div style={{ padding: "0 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* Image preview */}
+        {record.imageUrl && (
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 4, height: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
+            <Camera size={24} color="var(--text-secondary)" />
+            <span style={{ fontSize: "var(--font-body-sm)", color: "var(--text-secondary)" }}>Tap to expand</span>
+          </div>
+        )}
 
-      {/* Fields */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Data</span>
-          {!editing && (
-            <button onClick={() => setEditing(true)} className="text-xs text-neutral-500">Edit</button>
-          )}
-        </div>
-        {fields.map((f) => (
-          <div key={f.id} className="flex items-start gap-2 rounded-xl border border-neutral-200 p-3 dark:border-neutral-800">
-            <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dot(f.confidence)}`} />
-            <div className="flex-1">
-              <div className="text-xs text-neutral-500">{f.label}</div>
-              {editing ? (
-                <input type="text" value={editValues[f.id] || ""} onChange={(e) => setEditValues({ ...editValues, [f.id]: e.target.value })}
-                  className="w-full rounded-lg border border-neutral-300 px-2 py-1 text-sm mt-1 dark:border-neutral-700 dark:bg-neutral-900" />
-              ) : (
-                <div className="text-sm font-medium mt-0.5">{f.value || "—"}</div>
+        {/* Editable fields */}
+        {fields.map((field) => {
+          const isError = record.defectiveReasons.some((r) => r.includes(field.fieldName || ""));
+          const confidenceLabel = field.confidence === "high" ? "High" : field.confidence === "low" ? "Low" : field.confidence === "medium" ? "Medium" : "";
+
+          return (
+            <div key={field.id}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <label className="input-label" style={{ marginBottom: 0 }}>{field.label}</label>
+                {confidenceLabel && (
+                  <span style={{
+                    fontSize: "var(--font-caption)",
+                    fontWeight: 500,
+                    color: field.confidence === "high" ? "var(--success)" : field.confidence === "low" ? "var(--error)" : "var(--warning)",
+                  }}>
+                    {confidenceLabel}
+                  </span>
+                )}
+              </div>
+              <input
+                type="text"
+                value={editValues[field.id] || ""}
+                onChange={(e) => setEditValues({ ...editValues, [field.id]: e.target.value })}
+                className="input-field"
+                style={{
+                  borderColor: isError ? "var(--error)" : undefined,
+                  background: isError ? "var(--error-light)" : undefined,
+                }}
+              />
+              {isError && (
+                <span style={{ fontSize: "var(--font-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
+                  {field.label} is missing
+                </span>
               )}
             </div>
-          </div>
-        ))}
-      </div>
+          );
+        })}
 
-      {/* Actions */}
-      <div className="space-y-2">
-        {editing && (
-          <div className="flex gap-2">
-            <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-neutral-900 py-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900">
-              {saving ? "Saving..." : "Save changes"}
-            </button>
-            <button onClick={() => setEditing(false)} className="rounded-xl border border-neutral-300 px-4 py-3 text-sm dark:border-neutral-700">Cancel</button>
+        {/* Info callout */}
+        {fields.some((f) => f.fieldName?.includes("phone") && f.value) && (
+          <div style={{ display: "flex", gap: 12, background: "var(--info-light)", padding: 16, borderRadius: 4 }}>
+            <Info size={20} color="var(--info)" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <div style={{ fontSize: "var(--font-body)", fontWeight: 600, color: "var(--text-primary)" }}>Phone available</div>
+              <div style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)" }}>This person can be reached by phone</div>
+            </div>
           </div>
         )}
-        {record.status === "defective" && !editing && (
-          <button onClick={handleResolve} disabled={saving} className="w-full rounded-xl bg-green-600 py-3 text-sm font-medium text-white disabled:opacity-50">
-            Mark as resolved
-          </button>
-        )}
-      </div>
 
-      {/* Defective reasons */}
-      {record.defectiveReasons?.length > 0 && (
-        <div className="space-y-1">
-          <div className="text-xs font-medium text-red-600">Issues:</div>
-          {(record.defectiveReasons as string[]).map((r, i) => (
-            <div key={i} className="text-xs bg-red-50 text-red-600 rounded-lg px-2 py-1 dark:bg-red-900/20 dark:text-red-400">{r.replace(/_/g, " ")}</div>
-          ))}
+        {/* Save button */}
+        <button onClick={handleSave} disabled={saving} className="btn-primary">
+          {saving ? "Saving..." : "Save and resolve"}
+        </button>
+
+        {/* Skip link */}
+        <div style={{ textAlign: "center", paddingBottom: 24 }}>
+          <Link
+            href={`/capture/events/${eventId}/records?status=defective`}
+            style={{ fontSize: "var(--font-body-sm)", color: "var(--text-secondary)", textDecoration: "none" }}
+          >
+            Skip for now
+          </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }

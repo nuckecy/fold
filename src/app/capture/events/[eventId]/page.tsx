@@ -4,6 +4,7 @@ import { fldEvtEvents, fldEvtMembers, fldEvtRecords } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, Camera, Share2, AlertTriangle, Monitor, ChevronRight } from "lucide-react";
 
 export default async function CaptureEventPage({
   params,
@@ -19,88 +20,76 @@ export default async function CaptureEventPage({
     .select({ event: fldEvtEvents, role: fldEvtMembers.role })
     .from(fldEvtMembers)
     .innerJoin(fldEvtEvents, eq(fldEvtMembers.eventId, fldEvtEvents.id))
-    .where(
-      and(eq(fldEvtMembers.eventId, eventId), eq(fldEvtMembers.userId, session.user.id))
-    )
+    .where(and(eq(fldEvtMembers.eventId, eventId), eq(fldEvtMembers.userId, session.user.id)))
     .limit(1);
 
   if (!membership) notFound();
-  const { event, role } = membership;
+  const { event } = membership;
 
   const [stats] = await db
     .select({
       total: sql<number>`count(*)`,
-      captured: sql<number>`count(*) filter (where ${fldEvtRecords.status} = 'captured')`,
-      processing: sql<number>`count(*) filter (where ${fldEvtRecords.status} = 'processing')`,
+      scans: sql<number>`count(*) filter (where ${fldEvtRecords.captureMethod} = 'scan')`,
+      digital: sql<number>`count(*) filter (where ${fldEvtRecords.captureMethod} = 'digital')`,
       defective: sql<number>`count(*) filter (where ${fldEvtRecords.status} = 'defective')`,
-      reviewed: sql<number>`count(*) filter (where ${fldEvtRecords.status} = 'reviewed')`,
     })
     .from(fldEvtRecords)
     .where(eq(fldEvtRecords.eventId, eventId));
 
+  const actions = [
+    { icon: Camera, label: "Continue scanning", href: `/capture/events/${eventId}/scan` },
+    { icon: Share2, label: "Share online form", href: `/capture/events/${eventId}/form` },
+    { icon: AlertTriangle, label: "View flagged records", href: `/capture/events/${eventId}/records?status=defective`, badge: stats.defective > 0 ? stats.defective : undefined },
+    { icon: Monitor, label: "Open in dashboard", href: `/dashboard/events/${eventId}` },
+  ];
+
   return (
-    <div className="space-y-5">
-      <div>
-        <Link href="/capture" className="text-sm text-neutral-500">&larr; Events</Link>
-        <h1 className="text-xl font-bold mt-1">{event.title}</h1>
-        <p className="text-xs text-neutral-500">{event.date}</p>
+    <div style={{ background: "var(--app-bg)", minHeight: "100%" }}>
+      {/* Page header */}
+      <div className="page-header">
+        <Link href="/capture" style={{ textDecoration: "none" }}>
+          <span className="back"><ArrowLeft size={20} color="var(--text-primary)" /></span>
+        </Link>
+        <span className="title" style={{ flex: 1 }}>{event.title}</span>
+        {stats.defective > 0 && <span className="badge">{stats.defective}</span>}
       </div>
 
-      {/* Quick stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-neutral-200 p-3 text-center dark:border-neutral-800">
-          <div className="text-2xl font-bold">{stats.total}</div>
-          <div className="text-xs text-neutral-500">Total</div>
+      {/* Date */}
+      <div style={{ padding: "0 20px", marginBottom: 16 }}>
+        <span style={{ fontSize: "var(--font-body)", color: "var(--text-secondary)" }}>
+          {event.date}
+        </span>
+      </div>
+
+      {/* Metrics row */}
+      <div style={{ display: "flex", gap: 12, padding: "0 20px", marginBottom: 24 }}>
+        <div className="metric-card" style={{ flex: 1 }}>
+          <span className="value">{stats.total}</span>
+          <span className="label">records</span>
         </div>
-        <div className="rounded-xl border border-neutral-200 p-3 text-center dark:border-neutral-800">
-          <div className="text-2xl font-bold">{stats.reviewed}</div>
-          <div className="text-xs text-neutral-500">Reviewed</div>
+        <div className="metric-card" style={{ flex: 1 }}>
+          <span className="value">{stats.scans}/{stats.digital}</span>
+          <span className="label">scan/digital</span>
         </div>
-        <div className="rounded-xl border border-neutral-200 p-3 text-center dark:border-neutral-800">
-          <div className="text-2xl font-bold">{stats.captured + stats.processing}</div>
-          <div className="text-xs text-neutral-500">Processing</div>
-        </div>
-        <div className="rounded-xl border border-neutral-200 p-3 text-center dark:border-neutral-800">
-          <div className={`text-2xl font-bold ${stats.defective > 0 ? "text-red-600 dark:text-red-400" : ""}`}>
-            {stats.defective}
-          </div>
-          <div className="text-xs text-neutral-500">Flagged</div>
+        <div className="metric-card" style={{ flex: 1 }}>
+          <span className="value" style={{ color: stats.defective > 0 ? "var(--error)" : undefined }}>{stats.defective}</span>
+          <span className="label">flagged</span>
         </div>
       </div>
 
-      {/* Quick actions */}
-      <div className="space-y-2">
-        {event.status === "active" && (
-          <Link
-            href={`/capture/events/${eventId}/scan`}
-            className="block w-full rounded-xl bg-neutral-900 px-4 py-4 text-center text-sm font-medium text-white dark:bg-neutral-100 dark:text-neutral-900"
-          >
-            Start scanning
-          </Link>
-        )}
-
-        <Link
-          href={`/capture/events/${eventId}/fields`}
-          className="block w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-medium dark:border-neutral-700"
-        >
-          Configure fields
-        </Link>
-
-        <Link
-          href={`/capture/events/${eventId}/form`}
-          className="block w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-medium dark:border-neutral-700"
-        >
-          Share digital form
-        </Link>
-
-        {stats.defective > 0 && (
-          <Link
-            href={`/capture/events/${eventId}/records?status=defective`}
-            className="block w-full rounded-xl border border-red-300 px-4 py-3 text-center text-sm font-medium text-red-600 dark:border-red-800 dark:text-red-400"
-          >
-            Review {stats.defective} flagged record{stats.defective !== 1 ? "s" : ""}
-          </Link>
-        )}
+      {/* Action rows */}
+      <div style={{ padding: "0 20px" }}>
+        {actions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link key={action.label} href={action.href} className="action-row" style={{ textDecoration: "none" }}>
+              <Icon size={20} className="icon" />
+              <span className="text">{action.label}</span>
+              {action.badge && <span className="badge" style={{ background: "var(--error)", color: "var(--foreground-inverse)", fontSize: "var(--font-caption)", fontWeight: 600, padding: "2px 8px", borderRadius: 9999 }}>{action.badge}</span>}
+              <ChevronRight size={16} className="chevron" />
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
