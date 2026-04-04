@@ -266,6 +266,59 @@ For each item, reference the specific file(s) to modify.
 
 ---
 
+## Step 5: Design Pattern Extraction
+
+After completing the agent analyses, extract every distinct interaction and UI pattern observed across all screenshots into a comprehensive pattern library.
+
+### Pattern Categories to Extract:
+- **Navigation patterns** — Tab bars, back headers, segmented tabs, breadcrumbs
+- **Content patterns** — Cards, stat rows, list rows, profiles, reviews, progress indicators
+- **Form patterns** — Input fields, validation, steppers, selectors, radio/checkbox lists, toggles
+- **Action patterns** — CTAs, sticky bars, dual stacks, confirmation screens, error screens
+- **Overlay patterns** — Bottom sheets, modals, accordions/expandables
+- **Feedback patterns** — Skeleton loading, empty states, success confirmations, toasts
+- **Data display patterns** — Key-value lists, search results, grids
+- **App-specific patterns** — Patterns unique to Fold's domain (scan counter, processing progress, countdown timer, defective badges)
+
+### For Each Pattern, Document:
+```markdown
+### P-XX: [Pattern Name]
+**Structure:** Physical description — what elements it contains, sizes, spacing, arrangement
+**Behavior:** How it responds to interaction — tap, scroll, animate, dismiss
+**Fold use:** Where this pattern applies in Fold's screens
+```
+
+### Include a Pattern-to-Screen Mapping Table:
+Show which patterns each Fold screen should use, creating a blueprint for implementation.
+
+---
+
+## Step 6: Color Extraction
+
+Extract the exact color values observed across all screenshots and document their functional roles.
+
+### Extract:
+- **Neutral palette** — Every distinct gray/black/white value with its exact role (primary text, secondary text, dividers, backgrounds, disabled states)
+- **Accent color** — The single accent, where it appears, and the percentage of elements it touches
+- **Validation/status colors** — Success, error, warning with exactly where they appear (inline only? banners? backgrounds?)
+- **Background tints** — Selected states, chip fills, badge backgrounds, toast fills
+- **Interactive state colors** — Focus rings, press overlays, hover states
+
+### Document Color Principles:
+- How many colors are actually used (not how many exist in a palette)
+- The relationship between accent scarcity and visual impact
+- Rules for when color is used vs. when it is not
+- How elevation/depth is communicated (shadow vs. color)
+
+### Provide Fold Adaptation:
+Map each observed color to a `--fold-*` CSS custom property with:
+- The hex value
+- Where it is used in Fold
+- What changes from the inspiration (and why)
+- What stays the same (and why)
+
+---
+
 ## Output Format
 
 Deliver all outputs as markdown files inside a `design-docs/` folder at the project root:
@@ -278,6 +331,8 @@ Deliver all outputs as markdown files inside a `design-docs/` folder at the proj
 7. `design-gap-analysis.md` — The gap analysis from Step 4b
 8. `design-application-report.md` — The screen-by-screen recommendations from Step 4c
 9. `implementation-roadmap.md` — The phased implementation plan from Step 4d
+10. `design-patterns.md` — The pattern library from Step 5
+11. `color-extraction.md` — The color extraction from Step 6
 
 ---
 
