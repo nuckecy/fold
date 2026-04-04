@@ -205,9 +205,12 @@ body {
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 .input-field:focus {
-  border-color: var(--fold-text-primary);
-  box-shadow: 0 0 0 1px var(--fold-text-primary);
+  border-color: #222222;
+  border-width: 2px;
+  padding: 25px 15px 7px; /* compensate for thicker border */
   background: #FFFFFF;
+  outline: none;
+  box-shadow: none;
 }
 .input-field::placeholder { color: var(--fold-text-tertiary); }
 .input-field:-webkit-autofill,
@@ -251,8 +254,10 @@ body {
   border-radius: 0;
 }
 .input-group .input-field:focus {
-  box-shadow: none;
+  box-shadow: inset 0 0 0 2px #222222;
   background: #FFFFFF;
+  border: none;
+  padding: 26px 16px 8px;
 }
 
 textarea.input-field {
