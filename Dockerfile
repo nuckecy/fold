@@ -25,10 +25,20 @@ COPY --from=base /app/public ./public
 COPY --from=base --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=base --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy drizzle files for DB migration at startup
+COPY --from=base /app/package.json ./package.json
+COPY --from=base /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=base /app/src/db ./src/db
+COPY --from=base /app/node_modules ./node_modules
+
+# Startup script: push schema then start server
+COPY --from=base /app/start.sh ./start.sh
+RUN chmod +x start.sh
+
 USER nextjs
 
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["sh", "./start.sh"]
