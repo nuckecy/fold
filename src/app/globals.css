@@ -6,250 +6,331 @@
   --brand-hover: #162D4A;
   --brand-light: #EEF2F7;
 
-  /* Backgrounds */
+  /* iOS System Colors */
   --bg: #FFFFFF;
-  --surface: #F9FAFB;
-  --surface-secondary: #F5F5F5;
-  --app-bg: #F2F2F7;
+  --surface: #FFFFFF;
+  --surface-grouped: #F2F2F7;
+  --surface-elevated: rgba(255, 255, 255, 0.72);
+  --separator: rgba(60, 60, 67, 0.12);
+  --separator-opaque: #C6C6C8;
 
-  /* Text */
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --text-tertiary: #6B7280;
+  /* Text — iOS semantic colors */
+  --text-primary: #000000;
+  --text-secondary: rgba(60, 60, 67, 0.6);
+  --text-tertiary: rgba(60, 60, 67, 0.3);
   --foreground-inverse: #FFFFFF;
 
   /* Status */
-  --success: #15803D;
-  --success-light: #F0FDF4;
-  --error: #DC2626;
-  --error-light: #FEF2F2;
-  --error-bg: rgba(220, 53, 69, 0.1);
-  --warning: #B45309;
-  --warning-light: #FFFBEB;
-  --info: #3B82F6;
-  --info-light: #EFF6FF;
+  --success: #34C759;
+  --success-light: rgba(52, 199, 89, 0.12);
+  --error: #FF3B30;
+  --error-light: rgba(255, 59, 48, 0.12);
+  --warning: #FF9500;
+  --warning-light: rgba(255, 149, 0, 0.12);
+  --info: #007AFF;
+  --info-light: rgba(0, 122, 255, 0.12);
 
   /* Borders */
-  --border: #E5E7EB;
-  --border-light: #F0F0F0;
-  --border-focus: #1E3A5F;
+  --border: rgba(60, 60, 67, 0.12);
+  --border-light: rgba(60, 60, 67, 0.06);
+  --border-focus: #007AFF;
 
   /* Roles */
   --role-admin: #1E3A5F;
-  --role-scanner: #F97316;
-  --role-subadmin: #8B5CF6;
+  --role-scanner: #FF9500;
+  --role-subadmin: #AF52DE;
 
   /* Scan */
   --scan-accent: #06B6D4;
 
-  /* Typography sizes */
-  --font-display: 28px;
-  --font-heading: 24px;
-  --font-title: 20px;
-  --font-subtitle: 18px;
-  --font-body-lg: 16px;
-  --font-body: 14px;
-  --font-body-sm: 13px;
-  --font-caption: 12px;
-  --font-label: 11px;
+  /* iOS Typography sizes */
+  --font-large-title: 34px;
+  --font-title1: 28px;
+  --font-title2: 22px;
+  --font-title3: 20px;
+  --font-headline: 17px;
+  --font-body: 17px;
+  --font-callout: 16px;
+  --font-subhead: 15px;
+  --font-footnote: 13px;
+  --font-caption1: 12px;
+  --font-caption2: 11px;
+
+  /* Shadows — iOS card shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
 
   /* Legacy compat */
   --background: #ffffff;
-  --foreground: #111827;
+  --foreground: #000000;
+  --app-bg: #F2F2F7;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Inter", var(--font-geist-sans), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: -apple-system, "SF Pro Display", "Inter", system-ui, sans-serif;
+  --font-mono: "SF Mono", var(--font-geist-mono), monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: -apple-system, "SF Pro Display", "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
 }
 
-/* Design system utility classes */
+/* ─── iOS-style Buttons ─────────────────────────────────────────── */
+
 .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 48px;
+  height: 50px;
   background: var(--brand);
   color: var(--foreground-inverse);
-  border-radius: 9999px;
-  font-size: var(--font-body-lg);
-  font-weight: 500;
-  font-family: "Inter", sans-serif;
+  border-radius: var(--radius-md);
+  font-size: var(--font-body);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-family: inherit;
   border: none;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.btn-primary:hover { background: var(--brand-hover); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:hover { background: var(--brand-hover); transform: scale(0.98); }
+.btn-primary:active { transform: scale(0.96); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 48px;
-  background: transparent;
+  height: 50px;
+  background: var(--brand-light);
   color: var(--brand);
-  border-radius: 9999px;
-  font-size: var(--font-body-lg);
-  font-weight: 500;
-  font-family: "Inter", sans-serif;
-  border: 1px solid var(--brand);
+  border-radius: var(--radius-md);
+  font-size: var(--font-body);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-family: inherit;
+  border: none;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.btn-secondary:hover { background: var(--brand-light); }
+.btn-secondary:hover { background: #dde5ef; transform: scale(0.98); }
+.btn-secondary:active { transform: scale(0.96); }
 
 .btn-ghost {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 48px;
+  height: 44px;
   background: transparent;
-  color: var(--text-secondary);
-  border-radius: 9999px;
+  color: var(--info);
+  border-radius: var(--radius-sm);
   font-size: var(--font-body);
-  font-weight: 500;
-  font-family: "Inter", sans-serif;
-  border: 1px solid var(--border);
+  font-weight: 400;
+  font-family: inherit;
+  border: none;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
+
+/* ─── iOS-style Inputs ──────────────────────────────────────────── */
 
 .input-field {
   width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
   font-size: var(--font-body);
-  font-family: "Inter", sans-serif;
+  font-family: inherit;
   color: var(--text-primary);
-  background: var(--bg);
+  background: var(--surface-grouped);
   outline: none;
-  transition: border-color 0.15s;
+  transition: box-shadow 0.2s ease;
 }
-.input-field:focus { border-color: var(--border-focus); }
-.input-field::placeholder { color: var(--text-secondary); }
+.input-field:focus { box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2); }
+.input-field::placeholder { color: var(--text-tertiary); }
 
 .input-label {
   display: block;
-  font-size: var(--font-caption);
+  font-size: var(--font-footnote);
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   margin-bottom: 6px;
-  font-family: "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-family: inherit;
 }
 
+/* ─── iOS-style Cards ───────────────────────────────────────────── */
+
 .card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  background: var(--surface);
+  border: 0.5px solid var(--separator);
+  border-radius: var(--radius-md);
   padding: 16px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.card:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-sm);
 }
 
 .metric-card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 0.5px solid var(--separator);
+  border-radius: var(--radius-md);
   padding: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  box-shadow: var(--shadow-card);
 }
 .metric-card .value {
-  font-size: var(--font-heading);
-  font-weight: 600;
+  font-size: var(--font-title2);
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.03em;
 }
 .metric-card .label {
-  font-size: var(--font-caption);
+  font-size: var(--font-caption1);
   color: var(--text-secondary);
 }
+
+/* ─── iOS-style Page Header ─────────────────────────────────────── */
 
 .page-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 8px 20px 12px;
 }
 .page-header .back {
-  font-size: var(--font-title);
-  color: var(--text-primary);
+  font-size: var(--font-title3);
+  color: var(--info);
   cursor: pointer;
   background: none;
   border: none;
   padding: 0;
 }
 .page-header .title {
-  font-size: var(--font-subtitle);
+  font-size: var(--font-headline);
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 .page-header .badge {
   background: var(--error);
   color: var(--foreground-inverse);
-  font-size: var(--font-caption);
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 9999px;
+  font-size: var(--font-caption2);
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+/* ─── iOS-style Action Rows (grouped table) ─────────────────────── */
 
 .action-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border-light);
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--surface);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s ease;
 }
+.action-row:active { background: rgba(0, 0, 0, 0.04); }
 .action-row .icon {
   width: 20px;
   height: 20px;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 .action-row .text {
   flex: 1;
-  font-size: var(--font-body-lg);
-  font-weight: 500;
+  font-size: var(--font-body);
+  font-weight: 400;
   color: var(--text-primary);
 }
 .action-row .chevron {
-  width: 16px;
-  height: 16px;
-  color: var(--text-secondary);
+  width: 14px;
+  height: 14px;
+  color: var(--text-tertiary);
 }
+
+/* iOS grouped action list container */
+.action-group {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.action-group .action-row + .action-row {
+  border-top: 0.5px solid var(--separator);
+}
+
+/* ─── iOS-style Status Pills ────────────────────────────────────── */
 
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: var(--font-body-sm);
-  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-caption1);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .status-pill.brand { background: var(--brand); color: var(--foreground-inverse); }
 .status-pill.success { background: var(--success-light); color: var(--success); }
 .status-pill.error { background: var(--error-light); color: var(--error); }
 .status-pill.warning { background: var(--warning-light); color: var(--warning); }
 .status-pill.info { background: var(--info-light); color: var(--info); }
-.status-pill.muted { background: var(--surface-secondary); color: var(--text-secondary); }
+.status-pill.muted { background: rgba(60, 60, 67, 0.06); color: var(--text-secondary); }
+
+/* ─── iOS Frosted Glass ─────────────────────────────────────────── */
+
+.glass {
+  background: var(--surface-elevated);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* ─── iOS Section Header ────────────────────────────────────────── */
+
+.section-header {
+  font-size: var(--font-footnote);
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 8px 20px 4px;
+}
