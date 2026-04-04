@@ -1,140 +1,171 @@
 @import "tailwindcss";
 
+/* ════════════════════════════════════════════════════════════════════════════
+   FOLD DESIGN SYSTEM
+   Extracted from 66 inspiration screenshots + adapted for church context
+   Source: design-docs/color-extraction.md, font-extraction.md, design-patterns.md
+   ════════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  /* Brand */
+  /* ─── Colors: Neutrals ──────────────────────────────────────────────── */
+  --fold-text-primary: #222222;
+  --fold-text-secondary: #717171;
+  --fold-text-tertiary: #B0B0B0;
+  --fold-text-inverse: #FFFFFF;
+
+  --fold-bg: #FFFFFF;
+  --fold-bg-secondary: #F7F7F7;
+  --fold-bg-grouped: #F2F2F7;
+
+  --fold-divider: #EBEBEB;
+  --fold-border: #DDDDDD;
+  --fold-disabled: #DDDDDD;
+
+  /* ─── Colors: Brand Accent ──────────────────────────────────────────── */
+  --fold-accent: #1E3A5F;
+  --fold-accent-hover: #162D4A;
+  --fold-accent-light: #EEF2F7;
+
+  /* ─── Colors: Status (inline only, never backgrounds) ───────────────── */
+  --fold-success: #2E7D4F;
+  --fold-success-light: rgba(46, 125, 79, 0.1);
+  --fold-error: #C0392B;
+  --fold-error-light: rgba(192, 57, 43, 0.1);
+  --fold-warning: #C68A1D;
+  --fold-warning-light: rgba(198, 138, 29, 0.1);
+  --fold-info: #4A7FB5;
+  --fold-info-light: rgba(74, 127, 181, 0.1);
+
+  /* ─── Colors: Interactive ───────────────────────────────────────────── */
+  --fold-focus-ring: rgba(74, 127, 181, 0.3);
+  --fold-press: rgba(0, 0, 0, 0.04);
+
+  /* ─── Typography ────────────────────────────────────────────────────── */
+  --fold-font: -apple-system, "Inter", "SF Pro Display", system-ui, sans-serif;
+  --fold-type-title1: 28px;
+  --fold-type-title2: 22px;
+  --fold-type-title3: 20px;
+  --fold-type-headline: 17px;
+  --fold-type-body: 17px;
+  --fold-type-callout: 16px;
+  --fold-type-subhead: 15px;
+  --fold-type-footnote: 13px;
+  --fold-type-caption: 12px;
+
+  /* ─── Spacing (8px grid) ────────────────────────────────────────────── */
+  --fold-space-1: 4px;
+  --fold-space-2: 8px;
+  --fold-space-3: 12px;
+  --fold-space-4: 16px;
+  --fold-space-5: 20px;
+  --fold-space-6: 24px;
+  --fold-space-8: 32px;
+  --fold-space-10: 40px;
+
+  /* ─── Radii ─────────────────────────────────────────────────────────── */
+  --fold-radius-sm: 8px;
+  --fold-radius-md: 12px;
+  --fold-radius-lg: 16px;
+  --fold-radius-full: 9999px;
+
+  /* ─── Shadows ───────────────────────────────────────────────────────── */
+  --fold-shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  --fold-shadow-elevated: 0 4px 12px rgba(0,0,0,0.08);
+  --fold-shadow-float: 0 8px 24px rgba(0,0,0,0.12);
+
+  /* ─── Legacy compat (used by existing pages) ────────────────────────── */
+  --background: #ffffff;
+  --foreground: #222222;
+  --app-bg: #F2F2F7;
   --brand: #1E3A5F;
   --brand-hover: #162D4A;
   --brand-light: #EEF2F7;
-
-  /* iOS System Colors */
-  --bg: #FFFFFF;
-  --surface: #FFFFFF;
+  --separator: #EBEBEB;
+  --text-primary: #222222;
+  --text-secondary: #717171;
   --surface-grouped: #F2F2F7;
-  --surface-elevated: rgba(255, 255, 255, 0.72);
-  --separator: rgba(60, 60, 67, 0.12);
-  --separator-opaque: #C6C6C8;
-
-  /* Text — iOS semantic colors */
-  --text-primary: #000000;
-  --text-secondary: rgba(60, 60, 67, 0.6);
-  --text-tertiary: rgba(60, 60, 67, 0.3);
   --foreground-inverse: #FFFFFF;
-
-  /* Status */
-  --success: #34C759;
-  --success-light: rgba(52, 199, 89, 0.12);
-  --error: #FF3B30;
-  --error-light: rgba(255, 59, 48, 0.12);
-  --warning: #FF9500;
-  --warning-light: rgba(255, 149, 0, 0.12);
-  --info: #007AFF;
-  --info-light: rgba(0, 122, 255, 0.12);
-
-  /* Borders */
-  --border: rgba(60, 60, 67, 0.12);
-  --border-light: rgba(60, 60, 67, 0.06);
-  --border-focus: #007AFF;
-
-  /* Roles */
-  --role-admin: #1E3A5F;
-  --role-scanner: #FF9500;
-  --role-subadmin: #AF52DE;
-
-  /* Scan */
-  --scan-accent: #06B6D4;
-
-  /* iOS Typography sizes */
-  --font-large-title: 34px;
-  --font-title1: 28px;
-  --font-title2: 22px;
-  --font-title3: 20px;
-  --font-headline: 17px;
-  --font-body: 17px;
-  --font-callout: 16px;
-  --font-subhead: 15px;
-  --font-footnote: 13px;
-  --font-caption1: 12px;
-  --font-caption2: 11px;
-
-  /* Shadows — iOS card shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
-  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
-
-  /* Radii */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-full: 9999px;
-
-  /* Legacy compat */
-  --background: #ffffff;
-  --foreground: #000000;
-  --app-bg: #F2F2F7;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: -apple-system, "SF Pro Display", "Inter", system-ui, sans-serif;
-  --font-mono: "SF Mono", var(--font-geist-mono), monospace;
+  --font-sans: var(--fold-font);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, "SF Pro Display", "Inter", system-ui, sans-serif;
+  background: var(--fold-bg);
+  color: var(--fold-text-primary);
+  font-family: var(--fold-font);
+  font-size: var(--fold-type-body);
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ─── iOS-style Buttons ─────────────────────────────────────────── */
+/* ═══ BUTTONS ════════════════════════════════════════════════════════════ */
 
 .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--fold-space-2);
   width: 100%;
   height: 50px;
-  background: var(--brand);
-  color: var(--foreground-inverse);
-  border-radius: var(--radius-md);
-  font-size: var(--font-body);
+  background: var(--fold-accent);
+  color: var(--fold-text-inverse);
+  border-radius: var(--fold-radius-md);
+  font-size: var(--fold-type-callout);
   font-weight: 600;
-  letter-spacing: -0.02em;
-  font-family: inherit;
+  font-family: var(--fold-font);
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 100ms ease-out;
   -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
 }
-.btn-primary:hover { background: var(--brand-hover); transform: scale(0.98); }
-.btn-primary:active { transform: scale(0.96); }
+.btn-primary:active { transform: scale(0.97); }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--fold-space-2);
   width: 100%;
   height: 50px;
-  background: var(--brand-light);
-  color: var(--brand);
-  border-radius: var(--radius-md);
-  font-size: var(--font-body);
+  background: transparent;
+  color: var(--fold-text-primary);
+  border-radius: var(--fold-radius-md);
+  font-size: var(--fold-type-callout);
   font-weight: 600;
-  letter-spacing: -0.02em;
-  font-family: inherit;
+  font-family: var(--fold-font);
+  border: 1px solid var(--fold-text-primary);
+  cursor: pointer;
+  transition: transform 100ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+}
+.btn-secondary:active { transform: scale(0.97); opacity: 0.6; }
+.btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  background: none;
+  color: var(--fold-text-primary);
+  font-size: var(--fold-type-callout);
+  font-weight: 600;
+  font-family: var(--fold-font);
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 0 var(--fold-space-4);
   -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
 }
-.btn-secondary:hover { background: #dde5ef; transform: scale(0.98); }
-.btn-secondary:active { transform: scale(0.96); }
 
 .btn-ghost {
   display: flex;
@@ -143,194 +174,220 @@ body {
   width: 100%;
   height: 44px;
   background: transparent;
-  color: var(--info);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-body);
+  color: var(--fold-text-secondary);
+  border-radius: var(--fold-radius-sm);
+  font-size: var(--fold-type-body);
   font-weight: 400;
-  font-family: inherit;
+  font-family: var(--fold-font);
   border: none;
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
 }
 
-/* ─── iOS-style Inputs ──────────────────────────────────────────── */
+/* ═══ INPUTS ═════════════════════════════════════════════════════════════ */
 
 .input-field {
   width: 100%;
-  padding: 12px 16px;
+  height: 52px;
+  padding: 0 var(--fold-space-4);
   border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-body);
-  font-family: inherit;
-  color: var(--text-primary);
-  background: var(--surface-grouped);
+  border-radius: var(--fold-radius-sm);
+  font-size: var(--fold-type-body);
+  font-family: var(--fold-font);
+  color: var(--fold-text-primary);
+  background: var(--fold-bg-secondary);
   outline: none;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 200ms ease;
 }
-.input-field:focus { box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2); }
-.input-field::placeholder { color: var(--text-tertiary); }
+.input-field:focus { box-shadow: 0 0 0 3px var(--fold-focus-ring); }
+.input-field::placeholder { color: var(--fold-text-tertiary); }
+.input-field.error { box-shadow: 0 0 0 2px var(--fold-error); }
 
 .input-label {
   display: block;
-  font-size: var(--font-footnote);
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-size: var(--fold-type-footnote);
+  font-weight: 400;
+  color: var(--fold-text-secondary);
   margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  font-family: inherit;
+  font-family: var(--fold-font);
 }
 
-/* ─── iOS-style Cards ───────────────────────────────────────────── */
+textarea.input-field {
+  height: auto;
+  padding: var(--fold-space-3) var(--fold-space-4);
+  resize: vertical;
+}
+
+select.input-field {
+  appearance: none;
+  padding-right: 36px;
+}
+
+/* ═══ CARDS ══════════════════════════════════════════════════════════════ */
 
 .card {
-  background: var(--surface);
-  border: 0.5px solid var(--separator);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  background: var(--fold-bg);
+  border-radius: var(--fold-radius-md);
+  padding: var(--fold-space-4);
+  box-shadow: var(--fold-shadow-card);
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
   -webkit-tap-highlight-color: transparent;
 }
-.card:active {
-  transform: scale(0.98);
-  box-shadow: var(--shadow-sm);
-}
+.card:active { transform: scale(0.98); box-shadow: none; }
 
 .metric-card {
-  background: var(--surface);
-  border: 0.5px solid var(--separator);
-  border-radius: var(--radius-md);
-  padding: 16px;
+  background: var(--fold-bg);
+  border-radius: var(--fold-radius-md);
+  padding: var(--fold-space-4);
+  box-shadow: var(--fold-shadow-card);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  box-shadow: var(--shadow-card);
 }
 .metric-card .value {
-  font-size: var(--font-title2);
+  font-size: var(--fold-type-title2);
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--fold-text-primary);
   letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 .metric-card .label {
-  font-size: var(--font-caption1);
-  color: var(--text-secondary);
+  font-size: var(--fold-type-caption);
+  color: var(--fold-text-secondary);
 }
 
-/* ─── iOS-style Page Header ─────────────────────────────────────── */
+/* ═══ ACTION ROWS & GROUPS ═══════════════════════════════════════════════ */
+
+.action-group {
+  background: var(--fold-bg);
+  border-radius: var(--fold-radius-md);
+  overflow: hidden;
+  box-shadow: var(--fold-shadow-card);
+}
+.action-group .action-row + .action-row {
+  border-top: 0.5px solid var(--fold-divider);
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: var(--fold-space-4);
+  padding: var(--fold-space-3) var(--fold-space-4);
+  min-height: 52px;
+  background: var(--fold-bg);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 100ms ease;
+  text-decoration: none;
+  color: inherit;
+}
+.action-row:active { background: var(--fold-press); }
+.action-row .icon { width: 20px; height: 20px; color: var(--fold-text-secondary); flex-shrink: 0; }
+.action-row .text { flex: 1; font-size: var(--fold-type-body); font-weight: 400; color: var(--fold-text-primary); }
+.action-row .chevron { width: 14px; height: 14px; color: var(--fold-text-tertiary); }
+
+/* ═══ STATUS BADGES ══════════════════════════════════════════════════════ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fold-space-1);
+  padding: 3px 10px;
+  border-radius: var(--fold-radius-full);
+  font-size: var(--fold-type-caption);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.status-badge.brand { background: var(--fold-accent); color: var(--fold-text-inverse); }
+.status-badge.success { background: var(--fold-success-light); color: var(--fold-success); }
+.status-badge.error { background: var(--fold-error-light); color: var(--fold-error); }
+.status-badge.warning { background: var(--fold-warning-light); color: var(--fold-warning); }
+.status-badge.info { background: var(--fold-info-light); color: var(--fold-info); }
+.status-badge.muted { background: var(--fold-bg-secondary); color: var(--fold-text-secondary); }
+
+/* ═══ PAGE HEADER ════════════════════════════════════════════════════════ */
 
 .page-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 20px 12px;
+  gap: var(--fold-space-3);
+  padding: var(--fold-space-2) var(--fold-space-5) var(--fold-space-3);
 }
 .page-header .back {
-  font-size: var(--font-title3);
-  color: var(--info);
+  color: var(--fold-text-primary);
   cursor: pointer;
   background: none;
   border: none;
   padding: 0;
+  display: flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 .page-header .title {
-  font-size: var(--font-headline);
+  font-size: var(--fold-type-headline);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--fold-text-primary);
   letter-spacing: -0.02em;
 }
 .page-header .badge {
-  background: var(--error);
-  color: var(--foreground-inverse);
-  font-size: var(--font-caption2);
+  background: var(--fold-error);
+  color: var(--fold-text-inverse);
+  font-size: 11px;
   font-weight: 700;
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  border-radius: var(--radius-full);
+  border-radius: var(--fold-radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* ─── iOS-style Action Rows (grouped table) ─────────────────────── */
+/* ═══ UTILITY ════════════════════════════════════════════════════════════ */
 
-.action-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  background: var(--surface);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.1s ease;
+.divider {
+  height: 0.5px;
+  background: var(--fold-divider);
+  margin: 0 var(--fold-space-5);
 }
-.action-row:active { background: rgba(0, 0, 0, 0.04); }
-.action-row .icon {
-  width: 20px;
-  height: 20px;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-.action-row .text {
-  flex: 1;
-  font-size: var(--font-body);
-  font-weight: 400;
-  color: var(--text-primary);
-}
-.action-row .chevron {
-  width: 14px;
-  height: 14px;
-  color: var(--text-tertiary);
-}
-
-/* iOS grouped action list container */
-.action-group {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-.action-group .action-row + .action-row {
-  border-top: 0.5px solid var(--separator);
-}
-
-/* ─── iOS-style Status Pills ────────────────────────────────────── */
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-size: var(--font-caption1);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.status-pill.brand { background: var(--brand); color: var(--foreground-inverse); }
-.status-pill.success { background: var(--success-light); color: var(--success); }
-.status-pill.error { background: var(--error-light); color: var(--error); }
-.status-pill.warning { background: var(--warning-light); color: var(--warning); }
-.status-pill.info { background: var(--info-light); color: var(--info); }
-.status-pill.muted { background: rgba(60, 60, 67, 0.06); color: var(--text-secondary); }
-
-/* ─── iOS Frosted Glass ─────────────────────────────────────────── */
+.divider.full { margin: 0; }
 
 .glass {
-  background: var(--surface-elevated);
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
-/* ─── iOS Section Header ────────────────────────────────────────── */
+.skeleton {
+  background: var(--fold-bg-secondary);
+  border-radius: var(--fold-radius-sm);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
 
 .section-header {
-  font-size: var(--font-footnote);
+  font-size: var(--fold-type-footnote);
   font-weight: 400;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  padding: 8px 20px 4px;
+  color: var(--fold-text-secondary);
+  padding: var(--fold-space-2) var(--fold-space-5) var(--fold-space-1);
+}
+
+/* Renamed for backwards compat */
+.status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+.status-pill.brand { background: var(--fold-accent); color: var(--fold-text-inverse); }
+.status-pill.muted { background: var(--fold-bg-secondary); color: var(--fold-text-secondary); }
+.status-pill.success { background: var(--fold-success-light); color: var(--fold-success); }
+.status-pill.error { background: var(--fold-error-light); color: var(--fold-error); }
+
+/* ═══ REDUCED MOTION ═════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary:active, .btn-secondary:active, .card:active { transform: none !important; }
+  .skeleton { animation: none !important; opacity: 0.5; }
 }
