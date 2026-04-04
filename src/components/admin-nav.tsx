@@ -4,35 +4,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-interface NavProps {
-  user: {
-    name?: string | null;
-    email?: string | null;
-  };
-}
-
 const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/events", label: "Events" },
-  { href: "/dashboard/settings", label: "Settings" },
+  { href: "/admin", label: "Overview" },
+  { href: "/admin/ai", label: "AI Billing" },
+  { href: "/admin/emails", label: "Email Insights" },
+  { href: "/admin/users", label: "Users" },
+  { href: "/admin/organizations", label: "Organizations" },
+  { href: "/admin/gdpr", label: "GDPR" },
+  { href: "/admin/features", label: "Feature Flags" },
+  { href: "/admin/performance", label: "Performance" },
 ];
 
-export function DashboardNav({ user }: NavProps) {
+export function AdminNav() {
   const pathname = usePathname();
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 border-r border-neutral-200 dark:border-neutral-800">
       <div className="p-6">
-        <Link href="/dashboard" className="text-xl font-bold tracking-tight">
-          Fold Dashboard
+        <Link href="/admin" className="text-xl font-bold tracking-tight">
+          Fold Admin
         </Link>
+        <div className="text-xs text-neutral-500 mt-0.5">Super Admin</div>
       </div>
 
       <nav className="flex-1 px-3 space-y-1">
         {navItems.map((item) => {
           const isActive =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            item.href === "/admin"
+              ? pathname === "/admin"
+              : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
@@ -50,22 +50,18 @@ export function DashboardNav({ user }: NavProps) {
       </nav>
 
       <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2">
+        <Link href="/dashboard" className="block text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
+          Switch to Dashboard
+        </Link>
         <Link href="/capture" className="block text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
           Switch to Capture
         </Link>
-        <Link href="/admin" className="block text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
-          Switch to Admin
-        </Link>
-        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
-          <div className="text-sm font-medium truncate">{user.name}</div>
-          <div className="text-xs text-neutral-500 truncate">{user.email}</div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-            className="mt-2 text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
-          >
-            Sign out
-          </button>
-        </div>
+        <button
+          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+          className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+        >
+          Sign out
+        </button>
       </div>
     </aside>
   );

@@ -1,28 +1,48 @@
 import { auth } from "@/lib/auth";
 
 export default auth((req) => {
+  const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
-  const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
-  const isApiAuth = req.nextUrl.pathname.startsWith("/api/auth");
-  const isPublicForm = req.nextUrl.pathname.startsWith("/f/");
 
-  // Allow public routes
-  if (isApiAuth || isPublicForm) {
-    return;
-  }
+  // ─── Public routes (no auth required) ──────────────────────────────
+  const isPublic =
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/f/") ||           // Public digital forms
+    pathname.startsWith("/scan/") ||        // Scanner join (public)
+    pathname.startsWith("/unsubscribe") ||  // Unsubscribe page
+    pathname.startsWith("/api/f/") ||       // Public form API
+    pathname.startsWith("/api/scan/") ||    // Scanner join API
+    pathname.startsWith("/api/unsubscribe") || // Unsubscribe API
+    pathname.startsWith("/api/webhooks");   // Webhook endpoints
 
-  // Redirect unauthenticated users to sign in
+  if (isPublic) return;
+
+  // ─── Auth pages ────────────────────────────────────────────────────
+  const isAuthPage = pathname.startsWith("/auth");
+  const isProfileCompletion = pathname === "/auth/complete-profile";
+
   if (!isLoggedIn && !isAuthPage) {
     const signInUrl = new URL("/auth/signin", req.nextUrl.origin);
-    signInUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    signInUrl.searchParams.set("callbackUrl", pathname);
     return Response.redirect(signInUrl);
   }
 
-  // Redirect authenticated users away from auth pages (except profile completion)
-  const isProfileCompletion = req.nextUrl.pathname === "/auth/complete-profile";
   if (isLoggedIn && isAuthPage && !isProfileCompletion) {
-    return Response.redirect(new URL("/dashboard", req.nextUrl.origin));
+    return Response.redirect(new URL("/capture", req.nextUrl.origin));
   }
+
+  // ─── Entry point auth guards ───────────────────────────────────────
+
+  // /capture — any authenticated user (admin, sub_admin, scanner)
+  // No additional check needed — auth is sufficient
+
+  // /dashboard — admin or sub_admin (not scanner-only)
+  // TODO: Check role from database when role is stored in JWT
+  // For now, all authenticated users can access
+
+  // /admin — Super Admin only
+  // TODO: Check Super Admin flag from database
+  // For now, all authenticated users can access
 });
 
 export const config = {
