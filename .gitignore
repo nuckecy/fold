@@ -32,5 +32,8 @@ yarn-error.log*
 # Uploads
 uploads/
 
+# Inspiration
+inspiration/
+
 # Coverage
 coverage/
