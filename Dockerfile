@@ -2,13 +2,12 @@ FROM node:22-alpine AS base
 
 WORKDIR /app
 
-# Install dependencies
+# Install ALL dependencies (including devDependencies needed for build)
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
-# Build
+# Copy source and build
 COPY . .
-ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
