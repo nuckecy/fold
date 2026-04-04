@@ -84,7 +84,10 @@ export default function RegisterPage() {
         </form>
 
         <p style={{ textAlign: "center", fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>
-          We will send a verification email
+          Already have an account?{" "}
+          <Link href="/auth/signin" style={{ color: "var(--fold-text-primary)", textDecoration: "underline", fontWeight: 600 }}>
+            Log in
+          </Link>
         </p>
       </div>
     </div>
