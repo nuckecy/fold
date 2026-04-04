@@ -3,6 +3,8 @@
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Phase = "join" | "scanning";
 
@@ -16,7 +18,6 @@ export default function ScannerJoinPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sessionToken, setSessionToken] = useState("");
   const [eventId, setEventId] = useState("");
   const [scanCount, setScanCount] = useState(0);
   const [cameraActive, setCameraActive] = useState(false);
@@ -30,7 +31,6 @@ export default function ScannerJoinPage() {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) { setError(data.error || "Failed to join"); return; }
-    setSessionToken(data.sessionToken);
     setEventId(data.eventId);
     setPhase("scanning");
   }
@@ -57,33 +57,27 @@ export default function ScannerJoinPage() {
     }, "image/jpeg", 0.9);
   }
 
-  // Join phase (S-1)
+  // Join phase
   if (phase === "join") {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)", padding: "0 20px" }}>
-        <div style={{ width: "100%", maxWidth: 393, display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "60px 0" }}>
-          <h1 style={{ fontSize: "var(--font-heading)", fontWeight: 700, color: "var(--brand)" }}>Fold</h1>
-          <h2 style={{ fontSize: "var(--font-body-lg)", fontWeight: 600, color: "var(--text-primary)" }}>Join scanning session</h2>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--fold-bg)", padding: "0 var(--fold-space-5)" }}>
+        <div style={{ width: "100%", maxWidth: 393, display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--fold-space-4)", padding: "var(--fold-space-10) 0" }}>
+          <h1 style={{ fontSize: "var(--fold-type-title1)", fontWeight: 700, color: "var(--fold-accent)", letterSpacing: "-0.03em" }}>Fold</h1>
+          <h2 style={{ fontSize: "var(--fold-type-headline)", fontWeight: 600, color: "var(--fold-text-primary)" }}>Join scanning session</h2>
 
-          {/* Event card */}
-          <div style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 4, padding: 20 }}>
-            <div style={{ fontSize: "var(--font-body-lg)", fontWeight: 600, color: "var(--text-primary)" }}>Event</div>
-            <div style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)", marginTop: 4 }}>Code: {code}</div>
+          <div style={{ width: "100%", background: "var(--fold-bg-secondary)", borderRadius: "var(--fold-radius-md)", padding: "var(--fold-space-5)" }}>
+            <div style={{ fontSize: "var(--fold-type-headline)", fontWeight: 600, color: "var(--fold-text-primary)" }}>Event</div>
+            <div style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-secondary)", marginTop: "var(--fold-space-1)" }}>Code: {code}</div>
           </div>
 
-          {error && <div style={{ width: "100%", background: "var(--error-light)", padding: 12, borderRadius: 4, fontSize: "var(--font-body-sm)", color: "var(--error)" }}>{error}</div>}
+          {error && <div style={{ width: "100%", background: "var(--fold-error-light)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-error)" }}>{error}</div>}
 
-          <form onSubmit={handleJoin} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <label className="input-label">Your email</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="you@example.com" />
-            </div>
-            <button type="submit" disabled={loading} className="btn-primary">
-              {loading ? "Joining..." : "Join session"}
-            </button>
+          <form onSubmit={handleJoin} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "var(--fold-space-4)" }}>
+            <Input label="Your email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+            <Button type="submit" loading={loading}>Join session</Button>
           </form>
 
-          <p style={{ fontSize: "var(--font-caption)", color: "var(--text-secondary)", textAlign: "center" }}>
+          <p style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-secondary)", textAlign: "center" }}>
             You will only have access to scan cards for this event
           </p>
         </div>
@@ -91,33 +85,33 @@ export default function ScannerJoinPage() {
     );
   }
 
-  // Scanning phase — minimal scanner UI
+  // Scanning phase
   return (
     <div style={{ background: "#1A1A2E", height: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
       {cameraActive ? (
         <>
           <video ref={videoRef} autoPlay playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           <canvas ref={canvasRef} style={{ display: "none" }} />
-          <div style={{ position: "absolute", top: 226, left: 56, width: 280, height: 400, border: "2px solid rgba(255,255,255,0.3)", borderRadius: 4 }} />
+          <div style={{ position: "absolute", top: "28%", left: "14%", right: "14%", bottom: "30%", border: "2px solid rgba(255,255,255,0.3)", borderRadius: "var(--fold-radius-sm)" }} />
 
-          <div style={{ position: "relative", zIndex: 10, display: "flex", justifyContent: "space-between", padding: "52px 16px 0" }}>
-            <span style={{ color: "rgba(255,255,255,0.9)", fontSize: "var(--font-body-lg)", fontWeight: 500 }}>Fold Scanner</span>
-            <div style={{ background: "var(--scan-accent)", padding: "4px 12px", borderRadius: 4, color: "var(--foreground-inverse)", fontSize: "var(--font-body-sm)", fontWeight: 600 }}>
+          <div style={{ position: "relative", zIndex: 10, display: "flex", justifyContent: "space-between", padding: "52px var(--fold-space-4) 0" }}>
+            <span style={{ color: "rgba(255,255,255,0.9)", fontSize: "var(--fold-type-headline)", fontWeight: 500 }}>Fold Scanner</span>
+            <div style={{ background: "var(--fold-info)", padding: "var(--fold-space-1) var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", color: "var(--fold-text-inverse)", fontSize: "var(--fold-type-subhead)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
               {scanCount}
             </div>
           </div>
 
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 0 48px" }}>
-            <button onClick={capturePhoto} disabled={uploading} style={{ width: 72, height: 72, borderRadius: 9999, border: "3px solid rgba(255,255,255,0.8)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: 56, height: 56, borderRadius: 9999, background: "rgba(255,255,255,0.9)" }} />
+            <button onClick={capturePhoto} disabled={uploading} style={{ width: 72, height: 72, borderRadius: "var(--fold-radius-full)", border: "3px solid rgba(255,255,255,0.8)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 56, height: 56, borderRadius: "var(--fold-radius-full)", background: "rgba(255,255,255,0.9)" }} />
             </button>
           </div>
         </>
       ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 32 }}>
-          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "var(--font-body-lg)" }}>Ready to scan</p>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "var(--font-body-sm)", textAlign: "center" }}>Scanning as {email}</p>
-          <button onClick={startCamera} style={{ padding: "12px 32px", background: "var(--scan-accent)", color: "var(--foreground-inverse)", border: "none", borderRadius: 9999, fontSize: "var(--font-body-lg)", fontWeight: 500, cursor: "pointer" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--fold-space-4)", padding: "var(--fold-space-8)" }}>
+          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "var(--fold-type-headline)" }}>Ready to scan</p>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "var(--fold-type-subhead)", textAlign: "center" }}>Scanning as {email}</p>
+          <button onClick={startCamera} style={{ padding: "var(--fold-space-3) var(--fold-space-8)", background: "var(--fold-info)", color: "var(--fold-text-inverse)", border: "none", borderRadius: "var(--fold-radius-md)", fontSize: "var(--fold-type-headline)", fontWeight: 500, cursor: "pointer" }}>
             Open camera
           </button>
         </div>

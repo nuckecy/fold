@@ -21,32 +21,30 @@ export function CaptureShell({
 
   const header = (
     <div
+      className="glass"
       style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "10px 20px",
-        borderBottom: "0.5px solid var(--separator)",
+        padding: "var(--fold-space-3) var(--fold-space-5)",
+        borderBottom: "0.5px solid var(--fold-divider)",
         flexShrink: 0,
-        background: "rgba(255,255,255,0.72)",
-        backdropFilter: "saturate(180%) blur(20px)",
-        WebkitBackdropFilter: "saturate(180%) blur(20px)",
       }}
     >
-      <span style={{ fontSize: 22, fontWeight: 700, color: "var(--brand)", letterSpacing: "-0.03em" }}>
+      <span style={{ fontSize: "var(--fold-type-title2)", fontWeight: 700, color: "var(--fold-accent)", letterSpacing: "-0.03em" }}>
         Fold
       </span>
       <div
         style={{
           width: 34,
           height: 34,
-          borderRadius: 9999,
-          background: "var(--brand)",
+          borderRadius: "var(--fold-radius-full)",
+          background: "var(--fold-accent)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "#fff",
-          fontSize: 13,
+          color: "var(--fold-text-inverse)",
+          fontSize: "var(--fold-type-footnote)",
           fontWeight: 600,
         }}
       >
