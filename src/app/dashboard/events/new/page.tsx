@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function NewEventPage() {
   const router = useRouter();
@@ -57,156 +59,81 @@ export default function NewEventPage() {
   }
 
   return (
-    <div className="max-w-lg space-y-6">
-      <div>
-        <Link
-          href="/dashboard/events"
-          className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
-        >
-          &larr; Back to events
+    <div style={{ width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", gap: "var(--fold-space-5)" }}>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-3)" }}>
+        <Link href="/dashboard/events" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)", textDecoration: "none" }}>
+          <ArrowLeft size={14} />
+          Back to events
         </Link>
-        <h1 className="text-2xl font-bold mt-2">Create event</h1>
+        <h1 style={{ fontSize: "var(--fold-type-title2)", fontWeight: 600, color: "var(--fold-text-primary)" }}>
+          Create event
+        </h1>
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div style={{ background: "var(--fold-error-light)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-error)" }}>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-1">
-            Event title
-          </label>
-          <input
-            id="title"
-            type="text"
-            required
-            value={form.title}
-            onChange={(e) => update("title", e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-            placeholder="e.g. Sunday Service - New Converts"
-          />
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-5)" }}>
+        {/* Event title + Event date */}
+        <div className="input-group">
+          <div className="input-wrapper">
+            <label className="input-label">Event title</label>
+            <input type="text" required value={form.title} onChange={(e) => update("title", e.target.value)} className="input-field" placeholder="e.g. Sunday Service - New Converts" />
+          </div>
+          <div className="input-wrapper">
+            <label className="input-label">Event date</label>
+            <input type="date" required value={form.date} onChange={(e) => update("date", e.target.value)} className="input-field" />
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="date" className="block text-sm font-medium mb-1">
-            Event date
-          </label>
-          <input
-            id="date"
-            type="date"
-            required
-            value={form.date}
-            onChange={(e) => update("date", e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-          />
+        {/* Description */}
+        <div className="input-group">
+          <div className="input-wrapper">
+            <label className="input-label">Description (optional)</label>
+            <textarea value={form.description} onChange={(e) => update("description", e.target.value)} className="input-field" rows={3} />
+          </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium mb-1"
-          >
-            Description (optional)
-          </label>
-          <textarea
-            id="description"
-            value={form.description}
-            onChange={(e) => update("description", e.target.value)}
-            rows={3}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="primaryLanguage"
-              className="block text-sm font-medium mb-1"
-            >
-              Primary language
-            </label>
-            <select
-              id="primaryLanguage"
-              value={form.primaryLanguage}
-              onChange={(e) => update("primaryLanguage", e.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-            >
+        {/* Primary language + Secondary language */}
+        <div className="input-group">
+          <div className="input-wrapper">
+            <label className="input-label">Primary language</label>
+            <select value={form.primaryLanguage} onChange={(e) => update("primaryLanguage", e.target.value)} className="input-field">
               <option value="en">English</option>
               <option value="de">German</option>
             </select>
+            <ChevronDown size={16} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "var(--fold-text-secondary)", pointerEvents: "none" }} />
           </div>
-          <div>
-            <label
-              htmlFor="secondaryLanguage"
-              className="block text-sm font-medium mb-1"
-            >
-              Secondary language
-            </label>
-            <select
-              id="secondaryLanguage"
-              value={form.secondaryLanguage}
-              onChange={(e) => update("secondaryLanguage", e.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-            >
+          <div className="input-wrapper">
+            <label className="input-label">Secondary language</label>
+            <select value={form.secondaryLanguage} onChange={(e) => update("secondaryLanguage", e.target.value)} className="input-field">
               <option value="">None</option>
               <option value="en">English</option>
               <option value="de">German</option>
             </select>
+            <ChevronDown size={16} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "var(--fold-text-secondary)", pointerEvents: "none" }} />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="expectedMin"
-              className="block text-sm font-medium mb-1"
-            >
-              Expected min attendees
-            </label>
-            <input
-              id="expectedMin"
-              type="number"
-              min="0"
-              value={form.expectedAttendeesMin}
-              onChange={(e) => update("expectedAttendeesMin", e.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-            />
+        {/* Expected attendees */}
+        <div className="input-group">
+          <div className="input-wrapper">
+            <label className="input-label">Expected min attendees</label>
+            <input type="number" min="0" value={form.expectedAttendeesMin} onChange={(e) => update("expectedAttendeesMin", e.target.value)} className="input-field" placeholder="e.g. 50" />
           </div>
-          <div>
-            <label
-              htmlFor="expectedMax"
-              className="block text-sm font-medium mb-1"
-            >
-              Expected max attendees
-            </label>
-            <input
-              id="expectedMax"
-              type="number"
-              min="0"
-              value={form.expectedAttendeesMax}
-              onChange={(e) => update("expectedAttendeesMax", e.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-neutral-100"
-            />
+          <div className="input-wrapper">
+            <label className="input-label">Expected max attendees</label>
+            <input type="number" min="0" value={form.expectedAttendeesMax} onChange={(e) => update("expectedAttendeesMax", e.target.value)} className="input-field" placeholder="e.g. 200" />
           </div>
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
-          >
-            {loading ? "Creating..." : "Create event"}
-          </button>
-          <Link
-            href="/dashboard/events"
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
-          >
-            Cancel
-          </Link>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-3)" }}>
+          <Button type="submit" loading={loading}>Create event</Button>
+          <Button variant="secondary" type="button" onClick={() => router.push("/dashboard/events")}>Cancel</Button>
         </div>
       </form>
     </div>
