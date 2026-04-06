@@ -38,6 +38,25 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
   return { success: true };
 }
 
+export async function sendPasswordResetEmail(email: string, token: string) {
+  const url = `${APP_URL}/auth/reset-password?token=${token}`;
+
+  return sendEmail({
+    to: email,
+    subject: "Reset your Fold password",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2 style="font-size: 20px; font-weight: bold;">Reset your password</h2>
+        <p style="color: #666; font-size: 14px;">Click the button below to set a new password. This link expires in 1 hour.</p>
+        <a href="${url}" style="display: inline-block; background: #171717; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; margin-top: 16px;">
+          Reset password
+        </a>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">If you did not request this, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
+}
+
 export async function sendMagicLinkEmail(email: string, token: string) {
   const url = `${APP_URL}/api/auth/verify-magic-link?token=${token}`;
 

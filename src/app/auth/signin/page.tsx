@@ -12,6 +12,7 @@ function SignInForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/capture";
   const registered = searchParams.get("registered");
+  const reset = searchParams.get("reset");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +41,12 @@ function SignInForm() {
         {registered && (
           <div style={{ background: "var(--fold-success-light)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-success)" }}>
             Account created. Please sign in.
+          </div>
+        )}
+
+        {reset && (
+          <div style={{ background: "var(--fold-success-light)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-success)" }}>
+            Password has been reset. Please sign in.
           </div>
         )}
 
