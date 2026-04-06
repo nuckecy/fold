@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/ui/page-header";
 /* ─── Dual-thumb range slider ─────────────────────────────────────────────── */
 
 const SLIDER_MIN = 0;
-const SLIDER_MAX = 500;
+const SLIDER_MAX = 5000;
 const SLIDER_STEP = 10;
 
 function DualRangeSlider({
@@ -201,10 +201,7 @@ export default function CaptureNewEventPage() {
 
   return (
     <div style={{ background: "var(--fold-bg)", minHeight: "100%" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "var(--fold-space-4) var(--fold-space-5)" }}>
-        <PageHeader title="New event" back="/capture" />
-        <span style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>1 of 3</span>
-      </div>
+      <PageHeader title="New event" back="/capture" />
 
       {error && (
         <div style={{ margin: "0 var(--fold-space-5) var(--fold-space-4)", background: "var(--fold-error-light)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-error)" }}>
@@ -213,24 +210,22 @@ export default function CaptureNewEventPage() {
       )}
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-5)", padding: "0 var(--fold-space-5)" }}>
-        {/* Title + Date grouped */}
-        <div className="input-group">
-          <div className="input-wrapper">
-            <label className="input-label">Title</label>
-            <input type="text" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="input-field" placeholder="e.g. Easter Sunday Service" />
-          </div>
-          <div className="input-wrapper">
-            <label className="input-label">Date</label>
-            <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" />
-          </div>
-        </div>
-
-        {/* Description */}
+        {/* Title + Description + Date grouped */}
         <div>
-          <Textarea label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} placeholder="Brief description of the event" />
-          <p style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-text-tertiary)", marginTop: "var(--fold-space-2)", paddingLeft: "var(--fold-space-1)" }}>
-            Optional
-          </p>
+          <div className="input-group">
+            <div className="input-wrapper">
+              <label className="input-label">Title <span style={{ color: "var(--fold-error)" }}>*</span></label>
+              <input type="text" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="input-field" placeholder="e.g. Easter Sunday Service" />
+            </div>
+            <div className="input-wrapper">
+              <label className="input-label">Description</label>
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" rows={3} placeholder="Brief description of the event" />
+            </div>
+            <div className="input-wrapper">
+              <label className="input-label">Date <span style={{ color: "var(--fold-error)" }}>*</span></label>
+              <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" />
+            </div>
+          </div>
         </div>
 
         {/* Expected attendees — range slider */}
@@ -259,10 +254,6 @@ export default function CaptureNewEventPage() {
             onChange={updateAttendees}
           />
 
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--fold-type-caption)", color: "var(--fold-text-tertiary)", fontVariantNumeric: "tabular-nums" }}>
-            <span>{SLIDER_MIN}</span>
-            <span>{SLIDER_MAX}</span>
-          </div>
         </div>
 
         {/* Language toggle */}

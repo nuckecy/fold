@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CaptureNav } from "./capture-nav";
 
+const TAB_PATHS = ["/capture", "/capture/profile"];
+
 export function CaptureShell({
-  initials,
   children,
 }: {
-  initials: string;
+  initials?: string;
   children: React.ReactNode;
 }) {
   const [isDesktop, setIsDesktop] = useState(false);
+  const pathname = usePathname();
+  const showNav = TAB_PATHS.includes(pathname);
 
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 768);
@@ -30,39 +34,7 @@ export function CaptureShell({
     };
   }, []);
 
-  const header = (
-    <div
-      className="glass"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "var(--fold-space-3) var(--fold-space-5)",
-        borderBottom: "0.5px solid var(--fold-divider)",
-        flexShrink: 0,
-      }}
-    >
-      <span style={{ fontSize: "var(--fold-type-title2)", fontWeight: 700, color: "var(--fold-text-primary)", letterSpacing: "-0.03em" }}>
-        Fold
-      </span>
-      <div
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: "var(--fold-radius-full)",
-          background: "var(--fold-accent)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "var(--fold-text-inverse)",
-          fontSize: "var(--fold-type-footnote)",
-          fontWeight: 600,
-        }}
-      >
-        {initials}
-      </div>
-    </div>
-  );
+  const header = null;
 
   if (isDesktop) {
     return (
@@ -96,7 +68,7 @@ export function CaptureShell({
             <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", overscrollBehavior: "contain", minHeight: 0, paddingBottom: 20 }}>
               {children}
             </main>
-            <div style={{ flexShrink: 0 }}><CaptureNav /></div>
+            {showNav && <div style={{ flexShrink: 0 }}><CaptureNav /></div>}
             <div style={{ display: "flex", justifyContent: "center", paddingBottom: 8, paddingTop: 4, flexShrink: 0 }}>
               <div style={{ width: 134, height: 5, background: "rgba(0,0,0,0.18)", borderRadius: "var(--fold-radius-full)" }} />
             </div>
@@ -125,16 +97,17 @@ export function CaptureShell({
           overflowX: "hidden",
           overscrollBehavior: "contain",
           minHeight: 0,
-          paddingBottom: 76, /* nav (52) + 20px bottom + 4px buffer */
+          paddingBottom: showNav ? 76 : 20, /* nav (52) + 20px bottom + 4px buffer */
         }}
       >
         {children}
       </main>
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40 }}>
-        <CaptureNav />
-        {/* 20px safe area at the very bottom */}
-        <div style={{ height: 20, background: "var(--fold-bg)" }} />
-      </div>
+      {showNav && (
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40 }}>
+          <CaptureNav />
+          <div style={{ height: 20, background: "var(--fold-bg)" }} />
+        </div>
+      )}
     </div>
   );
 }

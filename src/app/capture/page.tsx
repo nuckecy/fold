@@ -3,9 +3,8 @@ import { db } from "@/db";
 import { fldEvtEvents, fldEvtMembers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
-import { ChevronRight, Plus, Inbox } from "lucide-react";
+import { ChevronRight, Inbox } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
 function formatDate(dateStr: string): string {
@@ -47,56 +46,34 @@ export default async function CaptureHomePage() {
           />
         ) : (
           memberships.map(({ event }) => (
-            <Card key={event.id} href={`/capture/events/${event.id}`} style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-3)" }}>
-              {/* Title row */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "var(--fold-type-headline)", fontWeight: 600, color: "var(--fold-text-primary)", letterSpacing: "-0.02em" }}>
+            <Card key={event.id} href={`/capture/events/${event.id}`} style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-2)" }}>
+              {/* Title + status + chevron */}
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-2)" }}>
+                <span style={{ fontSize: "var(--fold-type-headline)", fontWeight: 600, color: "var(--fold-text-primary)", letterSpacing: "-0.02em", flex: 1 }}>
                   {event.title}
                 </span>
-                <ChevronRight size={18} color="var(--fold-text-tertiary)" strokeWidth={2} />
+                {event.status === "active" && (
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "var(--fold-accent)", textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0 }}>
+                    Active
+                  </span>
+                )}
+                <ChevronRight size={16} color="var(--fold-text-tertiary)" strokeWidth={2} style={{ flexShrink: 0 }} />
               </div>
 
-              {/* Badges */}
-              <div style={{ display: "flex", gap: "var(--fold-space-2)" }}>
-                <Badge variant={event.status === "active" ? "brand" : "muted"}>
-                  {event.status === "active" ? "Active" : event.status}
-                </Badge>
-                <Badge>
-                  {event.primaryLanguage === "en" ? "English" : event.primaryLanguage === "de" ? "German" : event.primaryLanguage?.toUpperCase()}
-                </Badge>
+              {/* Date + language */}
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-2)" }}>
+                <span style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-secondary)" }}>
+                  {formatDate(event.date)}
+                </span>
+                <span style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-text-tertiary)", fontWeight: 500 }}>
+                  {event.primaryLanguage?.toUpperCase()}
+                </span>
               </div>
-
-              {/* Date */}
-              <span style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-secondary)" }}>
-                {formatDate(event.date)}
-              </span>
             </Card>
           ))
         )}
       </div>
 
-      {/* Join a session FAB */}
-      {memberships.length > 0 && (
-        <div style={{ position: "absolute", bottom: 72, right: "var(--fold-space-5)" }}>
-          <Link href="/scan" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--fold-space-1)", textDecoration: "none" }}>
-            <div style={{
-              width: 52,
-              height: 52,
-              borderRadius: "var(--fold-radius-full)",
-              background: "var(--fold-accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "var(--fold-shadow-float)",
-            }}>
-              <Plus size={22} color="var(--fold-text-inverse)" strokeWidth={2.5} />
-            </div>
-            <span style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-text-secondary)", fontWeight: 500 }}>
-              Join a session
-            </span>
-          </Link>
-        </div>
-      )}
     </div>
   );
 }

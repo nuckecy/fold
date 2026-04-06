@@ -43,10 +43,7 @@ export default function CaptureFieldsPage() {
 
   return (
     <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-3)", padding: "var(--fold-space-2) var(--fold-space-5) var(--fold-space-3)" }}>
-        <PageHeader title="Fields detected" back={`/capture/events/${eventId}`} />
-        <Badge>EN</Badge>
-      </div>
+      <PageHeader title="Fields detected" back={`/capture/events/${eventId}`} />
 
       {/* Field rows */}
       <div style={{ padding: "0 var(--fold-space-5)" }}>

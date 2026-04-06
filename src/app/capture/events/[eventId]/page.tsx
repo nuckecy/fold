@@ -46,7 +46,7 @@ export default async function CaptureEventPage({
 
   return (
     <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
-      <PageHeader title={event.title} back="/capture" badge={stats.defective > 0 ? stats.defective : undefined} />
+      <PageHeader title={event.title} back="/capture" />
 
       {/* Date + status */}
       <div style={{ padding: "0 var(--fold-space-5)", marginBottom: "var(--fold-space-4)", display: "flex", alignItems: "center", gap: "var(--fold-space-2)" }}>

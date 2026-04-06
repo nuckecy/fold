@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 /* ─── Dual-thumb range slider ─────────────────────────────────────────────── */
 
 const SLIDER_MIN = 0;
-const SLIDER_MAX = 500;
+const SLIDER_MAX = 5000;
 const SLIDER_STEP = 10;
 
 function DualRangeSlider({
@@ -298,34 +298,20 @@ export default function NewEventPage() {
           gap: "var(--fold-space-6)",
         }}
       >
-        {/* 1. Event title + Event date (grouped) */}
-        <div className="input-group">
-          <div className="input-wrapper">
-            <label className="input-label">Event title</label>
-            <input
-              type="text"
-              required
-              value={form.title}
-              onChange={(e) => update("title", e.target.value)}
-              className="input-field"
-              placeholder="e.g. Sunday Service - New Converts"
-            />
-          </div>
-          <div className="input-wrapper">
-            <label className="input-label">Event date</label>
-            <input
-              type="date"
-              required
-              value={form.date}
-              onChange={(e) => update("date", e.target.value)}
-              className="input-field"
-            />
-          </div>
-        </div>
-
-        {/* 2. Description (standalone with helper text) */}
+        {/* 1. Event title + Description + Event date (grouped) */}
         <div>
           <div className="input-group">
+            <div className="input-wrapper">
+              <label className="input-label">Event title <span style={{ color: "var(--fold-error)" }}>*</span></label>
+              <input
+                type="text"
+                required
+                value={form.title}
+                onChange={(e) => update("title", e.target.value)}
+                className="input-field"
+                placeholder="e.g. Sunday Service - New Converts"
+              />
+            </div>
             <div className="input-wrapper">
               <label className="input-label">Description</label>
               <textarea
@@ -336,17 +322,17 @@ export default function NewEventPage() {
                 placeholder="Add context about this event"
               />
             </div>
+            <div className="input-wrapper">
+              <label className="input-label">Event date <span style={{ color: "var(--fold-error)" }}>*</span></label>
+              <input
+                type="date"
+                required
+                value={form.date}
+                onChange={(e) => update("date", e.target.value)}
+                className="input-field"
+              />
+            </div>
           </div>
-          <p
-            style={{
-              fontSize: "var(--fold-type-caption)",
-              color: "var(--fold-text-tertiary)",
-              marginTop: "var(--fold-space-2)",
-              paddingLeft: "var(--fold-space-1)",
-            }}
-          >
-            Optional
-          </p>
         </div>
 
         {/* 3. Languages (grouped) */}
@@ -444,18 +430,6 @@ export default function NewEventPage() {
             onChange={updateAttendees}
           />
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "var(--fold-type-caption)",
-              color: "var(--fold-text-tertiary)",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            <span>{SLIDER_MIN}</span>
-            <span>{SLIDER_MAX}</span>
-          </div>
         </div>
 
         {/* 5. Actions */}

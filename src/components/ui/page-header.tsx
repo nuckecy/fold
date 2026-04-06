@@ -16,7 +16,7 @@ export function PageHeader({ title, back, badge, action }: PageHeaderProps) {
           <ArrowLeft size={20} />
         </Link>
       )}
-      <span className="title" style={{ flex: 1 }}>{title}</span>
+      <span className="title">{title}</span>
       {badge !== undefined && badge > 0 && (
         <span className="badge">{badge}</span>
       )}
