@@ -108,3 +108,122 @@ export function checkImageQuality(canvas: HTMLCanvasElement): QualityResult {
 
   return { pass: true };
 }
+
+/**
+ * Real-time text detection for live camera feed.
+ * Analyzes a canvas frame for handwriting/text presence.
+ * Runs at ~10fps, must complete in <50ms.
+ */
+export interface TextDetectionResult {
+  confidence: number; // 0-1
+  hasText: boolean;    // confidence > 0.6
+  isReady: boolean;    // confidence > 0.8 (auto-capture threshold)
+}
+
+export function detectTextPresence(canvas: HTMLCanvasElement): TextDetectionResult {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { confidence: 0, hasText: false, isReady: false };
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Sample the center 80% of the frame
+  const sx = Math.floor(w * 0.1);
+  const sy = Math.floor(h * 0.1);
+  const sw = Math.floor(w * 0.8);
+  const sh = Math.floor(h * 0.8);
+
+  const imageData = ctx.getImageData(sx, sy, sw, sh);
+  const pixels = imageData.data;
+  const totalPixels = sw * sh;
+
+  // ─── 1. Edge density (Sobel) ──────────────────────────────────────
+  // Text/handwriting creates many sharp edges in localized clusters
+  let strongEdges = 0;
+  let totalEdge = 0;
+  let edgeSamples = 0;
+  const stride = sw * 4;
+  const edgeThreshold = 25; // pixel brightness difference to count as "edge"
+
+  for (let y = 1; y < sh - 1; y += 3) {
+    for (let x = 1; x < sw - 1; x += 3) {
+      const idx = (y * sw + x) * 4;
+      const c = (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
+      const r = (pixels[idx + 4] + pixels[idx + 5] + pixels[idx + 6]) / 3;
+      const b = (pixels[idx + stride] + pixels[idx + stride + 1] + pixels[idx + stride + 2]) / 3;
+
+      const gx = Math.abs(r - c);
+      const gy = Math.abs(b - c);
+      const edge = Math.max(gx, gy);
+
+      totalEdge += edge;
+      edgeSamples++;
+      if (edge > edgeThreshold) strongEdges++;
+    }
+  }
+
+  const edgeDensity = edgeSamples > 0 ? strongEdges / edgeSamples : 0;
+  const avgEdge = edgeSamples > 0 ? totalEdge / edgeSamples : 0;
+
+  // ─── 2. Contrast ratio (paper + ink = high local contrast) ────────
+  // Handwriting on paper: bright background with dark strokes
+  let brightPixels = 0;
+  let darkPixels = 0;
+
+  for (let i = 0; i < pixels.length; i += 12) { // Every 3rd pixel
+    const brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+    if (brightness > 180) brightPixels++;
+    else if (brightness < 80) darkPixels++;
+  }
+
+  const sampledPixels = totalPixels / 3;
+  const brightRatio = brightPixels / sampledPixels;
+  const darkRatio = darkPixels / sampledPixels;
+  // Good card: lots of bright (paper) with some dark (ink)
+  const contrastScore = Math.min(brightRatio * 1.2, 1) * Math.min(darkRatio * 8, 1);
+
+  // ─── 3. Edge clustering (text has edges in horizontal bands) ──────
+  // Divide frame into horizontal strips and measure edge variance
+  const strips = 8;
+  const stripH = Math.floor(sh / strips);
+  const stripEdges: number[] = [];
+
+  for (let s = 0; s < strips; s++) {
+    let stripEdgeCount = 0;
+    const yStart = s * stripH;
+    const yEnd = Math.min(yStart + stripH, sh - 1);
+
+    for (let y = yStart + 1; y < yEnd; y += 4) {
+      for (let x = 1; x < sw - 1; x += 4) {
+        const idx = (y * sw + x) * 4;
+        const c = (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
+        const r = (pixels[idx + 4] + pixels[idx + 5] + pixels[idx + 6]) / 3;
+        if (Math.abs(r - c) > edgeThreshold) stripEdgeCount++;
+      }
+    }
+    stripEdges.push(stripEdgeCount);
+  }
+
+  // Text has uneven distribution (some strips have text, others are blank)
+  const avgStripEdge = stripEdges.reduce((a, b) => a + b, 0) / strips;
+  let stripVariance = 0;
+  for (const se of stripEdges) {
+    stripVariance += (se - avgStripEdge) ** 2;
+  }
+  stripVariance /= strips;
+  const clusterScore = Math.min(stripVariance / (avgStripEdge * avgStripEdge + 1), 1);
+
+  // ─── Combine scores ──────────────────────────────────────────────
+  // Edge density: 0-1, higher = more edges = likely text
+  // Contrast: 0-1, higher = bright paper + dark ink
+  // Cluster: 0-1, higher = edges concentrated in bands (text lines)
+  const edgeScore = Math.min(edgeDensity * 5, 1);
+
+  const confidence = (edgeScore * 0.4 + contrastScore * 0.35 + clusterScore * 0.25);
+
+  return {
+    confidence,
+    hasText: confidence > 0.35,
+    isReady: confidence > 0.55,
+  };
+}

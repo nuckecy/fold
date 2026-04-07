@@ -1,11 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Upload, X, Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { checkImageQuality } from "@/lib/image-quality";
+import { checkImageQuality, detectTextPresence } from "@/lib/image-quality";
 
 type ScanPhase = "setup" | "camera" | "preview";
 
@@ -25,6 +25,11 @@ export default function CaptureScanPage() {
   const [uploadError, setUploadError] = useState("");
   const [extractionResult, setExtractionResult] = useState<Record<string, { value: string; confidence: string }> | null>(null);
   const [processingStatus, setProcessingStatus] = useState<"" | "uploading" | "extracting" | "done">("");
+  const [detectionStatus, setDetectionStatus] = useState<"searching" | "detected" | "ready">("searching");
+  const detectionCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const readyTimerRef = useRef<number>(0);
+  const rafRef = useRef<number>(0);
+  const isCapturingRef = useRef(false);
 
   // Fetch existing scan count
   useEffect(() => {
@@ -67,7 +72,70 @@ export default function CaptureScanPage() {
     }
   }, [phase]);
 
+  // ─── Live text detection loop ─────────────────────────────────────
+  const runDetection = useCallback(() => {
+    if (phase !== "camera" || !videoRef.current || isCapturingRef.current) return;
+    const v = videoRef.current;
+    if (v.readyState < 2) { // Not enough data yet
+      rafRef.current = requestAnimationFrame(runDetection);
+      return;
+    }
+
+    // Create offscreen canvas for detection (small for speed)
+    if (!detectionCanvasRef.current) {
+      detectionCanvasRef.current = document.createElement("canvas");
+    }
+    const dc = detectionCanvasRef.current;
+    // Use small size for fast detection
+    dc.width = 320;
+    dc.height = Math.floor(320 * (v.videoHeight / v.videoWidth));
+    const dctx = dc.getContext("2d");
+    if (dctx) {
+      dctx.drawImage(v, 0, 0, dc.width, dc.height);
+      const result = detectTextPresence(dc);
+
+      if (result.isReady) {
+        readyTimerRef.current++;
+        setDetectionStatus("ready");
+        // Auto-capture after ~1.5 seconds of "ready" (15 frames at ~10fps)
+        if (readyTimerRef.current > 15 && !isCapturingRef.current) {
+          isCapturingRef.current = true;
+          capturePhoto();
+          return;
+        }
+      } else if (result.hasText) {
+        readyTimerRef.current = Math.max(readyTimerRef.current - 2, 0);
+        setDetectionStatus("detected");
+      } else {
+        readyTimerRef.current = 0;
+        setDetectionStatus("searching");
+      }
+    }
+
+    // Run at ~10fps (every 100ms)
+    setTimeout(() => {
+      rafRef.current = requestAnimationFrame(runDetection);
+    }, 100);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === "camera") {
+      isCapturingRef.current = false;
+      readyTimerRef.current = 0;
+      setDetectionStatus("searching");
+      // Start detection after a brief delay for camera to stabilize
+      const timer = setTimeout(() => {
+        rafRef.current = requestAnimationFrame(runDetection);
+      }, 500);
+      return () => {
+        clearTimeout(timer);
+        cancelAnimationFrame(rafRef.current);
+      };
+    }
+  }, [phase, runDetection]);
+
   function stopCamera() {
+    cancelAnimationFrame(rafRef.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
@@ -389,24 +457,41 @@ export default function CaptureScanPage() {
       <div style={{ position: "absolute", top: "18%", left: 0, width: "7.5%", bottom: "30.5%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", top: "18%", right: 0, width: "7.5%", bottom: "30.5%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
 
-      {/* Viewfinder — 85% width, ~16:9 landscape rectangle */}
-      <div style={{ position: "absolute", top: "18%", left: "7.5%", right: "7.5%", bottom: "30.5%", border: "1.5px solid rgba(255,255,255,0.6)", borderRadius: "var(--fold-radius-sm)", pointerEvents: "none" }} />
+      {/* Viewfinder border — color changes with detection */}
+      <div style={{
+        position: "absolute", top: "18%", left: "7.5%", right: "7.5%", bottom: "30.5%",
+        border: `2px solid ${detectionStatus === "ready" ? "#22C55E" : detectionStatus === "detected" ? "var(--fold-accent)" : "rgba(255,255,255,0.4)"}`,
+        borderRadius: "var(--fold-radius-sm)", pointerEvents: "none",
+        transition: "border-color 300ms ease",
+      }} />
 
-      {/* Corner markers */}
-      <div style={{ position: "absolute", top: "18%", left: "7.5%", width: 28, height: 28, borderTop: "3px solid #fff", borderLeft: "3px solid #fff", borderRadius: "3px 0 0 0" }} />
-      <div style={{ position: "absolute", top: "18%", right: "7.5%", width: 28, height: 28, borderTop: "3px solid #fff", borderRight: "3px solid #fff", borderRadius: "0 3px 0 0" }} />
-      <div style={{ position: "absolute", bottom: "30.5%", left: "7.5%", width: 28, height: 28, borderBottom: "3px solid #fff", borderLeft: "3px solid #fff", borderRadius: "0 0 0 3px" }} />
-      <div style={{ position: "absolute", bottom: "30.5%", right: "7.5%", width: 28, height: 28, borderBottom: "3px solid #fff", borderRight: "3px solid #fff", borderRadius: "0 0 3px 0" }} />
+      {/* Corner markers — color matches detection status */}
+      {(() => {
+        const color = detectionStatus === "ready" ? "#22C55E" : detectionStatus === "detected" ? "var(--fold-accent)" : "#fff";
+        return (
+          <>
+            <div style={{ position: "absolute", top: "18%", left: "7.5%", width: 28, height: 28, borderTop: `3px solid ${color}`, borderLeft: `3px solid ${color}`, borderRadius: "3px 0 0 0", transition: "border-color 300ms ease" }} />
+            <div style={{ position: "absolute", top: "18%", right: "7.5%", width: 28, height: 28, borderTop: `3px solid ${color}`, borderRight: `3px solid ${color}`, borderRadius: "0 3px 0 0", transition: "border-color 300ms ease" }} />
+            <div style={{ position: "absolute", bottom: "30.5%", left: "7.5%", width: 28, height: 28, borderBottom: `3px solid ${color}`, borderLeft: `3px solid ${color}`, borderRadius: "0 0 0 3px", transition: "border-color 300ms ease" }} />
+            <div style={{ position: "absolute", bottom: "30.5%", right: "7.5%", width: 28, height: 28, borderBottom: `3px solid ${color}`, borderRight: `3px solid ${color}`, borderRadius: "0 0 3px 0", transition: "border-color 300ms ease" }} />
+          </>
+        );
+      })()}
 
-      {/* Hint text or quality error */}
+      {/* Hint text — changes with detection status */}
       <div style={{ position: "absolute", top: "13%", left: 0, right: 0, textAlign: "center", zIndex: 10, padding: "0 var(--fold-space-5)" }}>
         {uploadError ? (
           <div style={{ background: "rgba(192,57,43,0.95)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "#fff", fontWeight: 500, animation: "fadeIn 200ms ease-out" }}>
             {uploadError}
           </div>
         ) : (
-          <span style={{ color: "#fff", fontSize: "var(--fold-type-footnote)", fontWeight: 600, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
-            Align the card within the frame
+          <span style={{
+            color: detectionStatus === "ready" ? "#22C55E" : "#fff",
+            fontSize: "var(--fold-type-footnote)", fontWeight: 600,
+            textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+            transition: "color 300ms ease",
+          }}>
+            {detectionStatus === "ready" ? "Hold steady... auto-capturing" : detectionStatus === "detected" ? "Text detected — hold steady..." : "Point camera at a card with text"}
           </span>
         )}
       </div>
@@ -422,20 +507,36 @@ export default function CaptureScanPage() {
       </div>
 
       {/* Bottom bar */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 0 var(--fold-space-10)" }}>
-        {/* Shutter button */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", padding: "0 0 var(--fold-space-10)", gap: "var(--fold-space-2)" }}>
+        {/* Detection status indicator */}
+        {detectionStatus === "ready" && (
+          <div style={{ background: "rgba(34,197,94,0.2)", padding: "var(--fold-space-1) var(--fold-space-4)", borderRadius: "var(--fold-radius-full)", display: "flex", alignItems: "center", gap: "var(--fold-space-2)" }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", animation: "pulse 1s ease-in-out infinite" }} />
+            <span style={{ color: "#22C55E", fontSize: "var(--fold-type-caption)", fontWeight: 600 }}>AUTO-CAPTURING</span>
+          </div>
+        )}
+
+        {/* Shutter button — dimmed when no text detected */}
         <button
           onClick={capturePhoto}
+          disabled={detectionStatus === "searching"}
           style={{
             width: 72, height: 72, borderRadius: "var(--fold-radius-full)",
-            border: "4px solid rgba(255,255,255,0.8)", background: "transparent",
-            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "transform 100ms ease",
+            border: `4px solid ${detectionStatus === "searching" ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.8)"}`,
+            background: "transparent",
+            cursor: detectionStatus === "searching" ? "not-allowed" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "border-color 300ms ease, opacity 300ms ease",
+            opacity: detectionStatus === "searching" ? 0.4 : 1,
           }}
-          onPointerDown={(e) => { (e.target as HTMLElement).style.transform = "scale(0.92)"; }}
+          onPointerDown={(e) => { if (detectionStatus !== "searching") (e.target as HTMLElement).style.transform = "scale(0.92)"; }}
           onPointerUp={(e) => { (e.target as HTMLElement).style.transform = "scale(1)"; }}
         >
-          <div style={{ width: 56, height: 56, borderRadius: "var(--fold-radius-full)", background: "rgba(255,255,255,0.95)" }} />
+          <div style={{
+            width: 56, height: 56, borderRadius: "var(--fold-radius-full)",
+            background: detectionStatus === "ready" ? "#22C55E" : detectionStatus === "detected" ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.3)",
+            transition: "background 300ms ease",
+          }} />
         </button>
       </div>
 
