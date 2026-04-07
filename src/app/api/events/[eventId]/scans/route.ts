@@ -5,6 +5,8 @@ import { fldEvtMembers, fldEvtRecords } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { logActivity } from "@/services/activity-log";
 import { uploadFile, scanKey } from "@/lib/storage";
+import { extractFromImage } from "@/services/ai-extraction";
+import { fldEvtFieldSchemas, fldEvtFieldValues } from "@/db/schema";
 
 // GET /api/events/:eventId/scans — Get scan count
 export async function GET(
@@ -125,6 +127,85 @@ export async function POST(
       metadata: { recordId: record.id, filename },
     });
 
+    // ─── Auto-trigger AI extraction ──────────────────────────────────
+    // Check if event has field schemas configured
+    const fieldSchemas = await db
+      .select()
+      .from(fldEvtFieldSchemas)
+      .where(eq(fldEvtFieldSchemas.eventId, eventId));
+
+    if (fieldSchemas.length > 0 && process.env.GEMINI_API_KEY) {
+      try {
+        // Mark as processing
+        await db
+          .update(fldEvtRecords)
+          .set({ status: "processing" })
+          .where(eq(fldEvtRecords.id, record.id));
+
+        const result = await extractFromImage(record.id, eventId, imageUrl);
+
+        if (result.success) {
+          const defectiveReasons: string[] = [];
+          const fieldMap = new Map(fieldSchemas.map((f) => [f.fieldName, f]));
+
+          for (const [fieldName, data] of Object.entries(result.fields)) {
+            const schema = fieldMap.get(fieldName);
+            if (!schema) continue;
+
+            await db.insert(fldEvtFieldValues).values({
+              recordId: record.id,
+              fieldSchemaId: schema.id,
+              extractedValue: data.value || null,
+              confidence: data.confidence,
+            });
+
+            if (schema.isRequired && !data.value) {
+              defectiveReasons.push(`missing_${fieldName}`);
+            }
+          }
+
+          // Check if email is missing (common defective reason)
+          const emailField = result.fields["email"];
+          if (!emailField?.value) {
+            if (!defectiveReasons.includes("missing_email")) {
+              defectiveReasons.push("missing_email");
+            }
+          }
+
+          const finalStatus = defectiveReasons.length > 0 ? "defective" : "processed";
+
+          await db
+            .update(fldEvtRecords)
+            .set({ status: finalStatus, defectiveReasons, updatedAt: new Date() })
+            .where(eq(fldEvtRecords.id, record.id));
+
+          return NextResponse.json(
+            { ...record, status: finalStatus, extraction: "success", fields: result.fields },
+            { status: 201 }
+          );
+        } else {
+          // Extraction failed — mark as captured for manual review
+          await db
+            .update(fldEvtRecords)
+            .set({ status: "defective", defectiveReasons: ["extraction_failed"], updatedAt: new Date() })
+            .where(eq(fldEvtRecords.id, record.id));
+
+          return NextResponse.json(
+            { ...record, status: "defective", extraction: "failed", error: result.error },
+            { status: 201 }
+          );
+        }
+      } catch (extractErr: any) {
+        console.error("[scans] Extraction error:", extractErr?.message);
+        // Upload succeeded but extraction failed — record stays as captured
+        return NextResponse.json(
+          { ...record, extraction: "error", error: extractErr?.message },
+          { status: 201 }
+        );
+      }
+    }
+
+    // No field schemas or no API key — return as-is
     return NextResponse.json(record, { status: 201 });
   } catch (err: any) {
     console.error("[scans] Upload error:", err?.message || err);

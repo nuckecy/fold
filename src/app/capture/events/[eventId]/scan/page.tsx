@@ -22,6 +22,7 @@ export default function CaptureScanPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [uploadError, setUploadError] = useState("");
+  const [extractionResult, setExtractionResult] = useState<Record<string, { value: string; confidence: string }> | null>(null);
 
   // Fetch existing scan count
   useEffect(() => {
@@ -123,9 +124,29 @@ export default function CaptureScanPage() {
 
     try {
       const res = await fetch(`/api/events/${eventId}/scans`, { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setScanCount((c) => c + 1);
-        // Success — go back to camera for next capture
+
+        // Show extraction results briefly if available
+        if (data.fields) {
+          setExtractionResult(data.fields);
+          setUploading(false);
+          // Auto-advance after 2 seconds
+          setTimeout(() => {
+            setExtractionResult(null);
+            setPreviewUrl(null);
+            setCapturedBlob(null);
+            if (videoRef.current && streamRef.current) {
+              videoRef.current.srcObject = streamRef.current;
+              videoRef.current.play();
+            }
+            setPhase("camera");
+          }, 2500);
+          return;
+        }
+
+        // No extraction — go back to camera immediately
         setPreviewUrl(null);
         setCapturedBlob(null);
         if (videoRef.current && streamRef.current) {
@@ -134,7 +155,6 @@ export default function CaptureScanPage() {
         }
         setPhase("camera");
       } else {
-        const data = await res.json().catch(() => ({}));
         setUploadError(data.error || "Upload failed. Try again.");
       }
     } catch {
@@ -223,6 +243,23 @@ export default function CaptureScanPage() {
         {uploadError && (
           <div style={{ position: "relative", zIndex: 10, margin: "var(--fold-space-3) var(--fold-space-5) 0", background: "rgba(192,57,43,0.9)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "#fff" }}>
             {uploadError}
+          </div>
+        )}
+
+        {/* Extraction results overlay */}
+        {extractionResult && (
+          <div style={{ position: "relative", zIndex: 10, margin: "var(--fold-space-3) var(--fold-space-5) 0", background: "rgba(0,0,0,0.75)", padding: "var(--fold-space-4)", borderRadius: "var(--fold-radius-md)", backdropFilter: "blur(8px)" }}>
+            <div style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-accent)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "var(--fold-space-2)" }}>
+              Extracted
+            </div>
+            {Object.entries(extractionResult).map(([key, data]) => (
+              <div key={key} style={{ display: "flex", justifyContent: "space-between", padding: "var(--fold-space-1) 0" }}>
+                <span style={{ fontSize: "var(--fold-type-footnote)", color: "rgba(255,255,255,0.5)", textTransform: "capitalize" }}>{key.replace("_", " ")}</span>
+                <span style={{ fontSize: "var(--fold-type-subhead)", color: data.value ? "#fff" : "rgba(255,255,255,0.3)", fontWeight: 500 }}>
+                  {data.value || "—"}
+                </span>
+              </div>
+            ))}
           </div>
         )}
 
