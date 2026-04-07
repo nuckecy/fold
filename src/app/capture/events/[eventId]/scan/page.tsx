@@ -23,6 +23,7 @@ export default function CaptureScanPage() {
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [extractionResult, setExtractionResult] = useState<Record<string, { value: string; confidence: string }> | null>(null);
+  const [processingStatus, setProcessingStatus] = useState<"" | "uploading" | "extracting" | "done">("");
 
   // Fetch existing scan count
   useEffect(() => {
@@ -112,10 +113,23 @@ export default function CaptureScanPage() {
 
   // ─── Confirm & Upload ─────────────────────────────────────────────
 
+  function goBackToCamera() {
+    setExtractionResult(null);
+    setPreviewUrl(null);
+    setCapturedBlob(null);
+    setProcessingStatus("");
+    if (videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play();
+    }
+    setPhase("camera");
+  }
+
   async function confirmAndUpload() {
     if (!capturedBlob) return;
     setUploading(true);
     setUploadError("");
+    setProcessingStatus("uploading");
 
     const file = new File([capturedBlob], `scan-${Date.now()}.jpg`, { type: "image/jpeg" });
     const fd = new FormData();
@@ -123,52 +137,67 @@ export default function CaptureScanPage() {
     fd.append("sourceDetail", "camera");
 
     try {
-      const res = await fetch(`/api/events/${eventId}/scans`, { method: "POST", body: fd });
-      const data = await res.json().catch(() => ({}));
+      // Step 1: Upload to R2 (fast)
+      const uploadRes = await fetch(`/api/events/${eventId}/scans`, { method: "POST", body: fd });
+      const uploadData = await uploadRes.json().catch(() => ({}));
 
-      // Image rejected — not a valid card
-      if (data.rejected) {
-        setUploadError(data.error || "This image was rejected. Please capture a registration card.");
+      if (uploadData.rejected) {
+        setUploadError(uploadData.error || "This image was rejected.");
         setUploading(false);
+        setProcessingStatus("");
         return;
       }
 
-      if (res.ok) {
-        setScanCount((c) => c + 1);
+      if (!uploadRes.ok) {
+        setUploadError(uploadData.error || "Upload failed. Try again.");
+        setUploading(false);
+        setProcessingStatus("");
+        return;
+      }
 
-        // Show extraction results briefly if available
-        if (data.fields) {
-          setExtractionResult(data.fields);
+      setScanCount((c) => c + 1);
+      setProcessingStatus("extracting");
+
+      // Step 2: Trigger AI extraction (separate call)
+      try {
+        const extractRes = await fetch(`/api/events/${eventId}/scans/extract`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recordId: uploadData.recordId || uploadData.id }),
+        });
+        const extractData = await extractRes.json().catch(() => ({}));
+
+        if (extractData.rejected) {
+          // AI found no useful data — record was deleted
+          setScanCount((c) => Math.max(0, c - 1));
+          setUploadError(extractData.error || "No readable data found on this card.");
           setUploading(false);
-          // Auto-advance after 2 seconds
-          setTimeout(() => {
-            setExtractionResult(null);
-            setPreviewUrl(null);
-            setCapturedBlob(null);
-            if (videoRef.current && streamRef.current) {
-              videoRef.current.srcObject = streamRef.current;
-              videoRef.current.play();
-            }
-            setPhase("camera");
-          }, 2500);
+          setProcessingStatus("");
           return;
         }
 
-        // No extraction — go back to camera immediately
-        setPreviewUrl(null);
-        setCapturedBlob(null);
-        if (videoRef.current && streamRef.current) {
-          videoRef.current.srcObject = streamRef.current;
-          videoRef.current.play();
+        if (extractData.fields) {
+          setExtractionResult(extractData.fields);
+          setUploading(false);
+          setProcessingStatus("done");
+          // Auto-advance after showing results
+          setTimeout(() => goBackToCamera(), 2500);
+          return;
         }
-        setPhase("camera");
-      } else {
-        setUploadError(data.error || "Upload failed. Try again.");
+      } catch {
+        // Extraction failed but upload succeeded — that's fine
+        console.log("Extraction request failed, record saved as captured");
       }
+
+      // Upload OK, extraction skipped or failed — go back to camera
+      setUploading(false);
+      setProcessingStatus("");
+      goBackToCamera();
     } catch {
       setUploadError("Network error. Check your connection and try again.");
+      setUploading(false);
+      setProcessingStatus("");
     }
-    setUploading(false);
   }
 
   // ─── Gallery upload ───────────────────────────────────────────────
@@ -243,7 +272,7 @@ export default function CaptureScanPage() {
         {/* Top bar */}
         <div style={{ position: "relative", zIndex: 10, padding: "52px var(--fold-space-5) 0" }}>
           <span style={{ color: "rgba(255,255,255,0.9)", fontSize: "var(--fold-type-subhead)", fontWeight: 500 }}>
-            Review capture
+            {processingStatus === "uploading" ? "Uploading..." : processingStatus === "extracting" ? "Reading card..." : processingStatus === "done" ? "Done" : "Review capture"}
           </span>
         </div>
 
@@ -275,7 +304,7 @@ export default function CaptureScanPage() {
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10, padding: "0 var(--fold-space-5) var(--fold-space-8)" }}>
           {/* Status text */}
           <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "var(--fold-type-footnote)", textAlign: "center", marginBottom: "var(--fold-space-4)" }}>
-            {uploading ? "Uploading..." : "Is the card clearly visible and within frame?"}
+            {processingStatus === "uploading" ? "Saving image..." : processingStatus === "extracting" ? "AI is reading the card..." : processingStatus === "done" ? "Extraction complete" : "Is the card clearly visible and within frame?"}
           </p>
 
           {/* Progress bar during upload */}
