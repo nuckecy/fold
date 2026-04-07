@@ -5,7 +5,6 @@ import { fldEvtMembers, fldEvtRecords } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { logActivity } from "@/services/activity-log";
 import { uploadFile, scanKey } from "@/lib/storage";
-import { v4 as uuidv4 } from "uuid";
 
 // GET /api/events/:eventId/scans — Get scan count
 export async function GET(
@@ -98,32 +97,40 @@ export async function POST(
 
   // UUID-based filename (N6: no original filenames preserved)
   const ext = file.name.split(".").pop() || "jpg";
-  const filename = `${uuidv4()}.${ext}`;
+  const filename = `${crypto.randomUUID()}.${ext}`;
   const key = scanKey(eventId, filename);
 
-  // Upload to R2
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const imageUrl = await uploadFile(key, bytes, file.type);
+  try {
+    // Upload to R2
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const imageUrl = await uploadFile(key, bytes, file.type);
 
-  // Create record — one image = one record, always (D5)
-  const [record] = await db
-    .insert(fldEvtRecords)
-    .values({
+    // Create record — one image = one record, always (D5)
+    const [record] = await db
+      .insert(fldEvtRecords)
+      .values({
+        eventId,
+        captureMethod: "scan",
+        sourceDetail,
+        imageUrl,
+        status: "captured",
+      })
+      .returning();
+
+    await logActivity({
       eventId,
-      captureMethod: "scan",
-      sourceDetail,
-      imageUrl,
-      status: "captured",
-    })
-    .returning();
+      actionType: "scan_uploaded",
+      actorUserId: session.user.id,
+      description: `Uploaded scan (${sourceDetail})`,
+      metadata: { recordId: record.id, filename },
+    });
 
-  await logActivity({
-    eventId,
-    actionType: "scan_uploaded",
-    actorUserId: session.user.id,
-    description: `Uploaded scan (${sourceDetail})`,
-    metadata: { recordId: record.id, filename },
-  });
-
-  return NextResponse.json(record, { status: 201 });
+    return NextResponse.json(record, { status: 201 });
+  } catch (err: any) {
+    console.error("[scans] Upload error:", err?.message || err);
+    return NextResponse.json(
+      { error: err?.message || "Upload failed" },
+      { status: 500 }
+    );
+  }
 }
