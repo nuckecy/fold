@@ -89,11 +89,12 @@ export default function CaptureRecordDetailPage() {
         {/* Image preview */}
         {record.imageUrl && !imgError ? (
           <div style={{ borderRadius: "var(--fold-radius-md)", overflow: "hidden", border: "0.5px solid var(--fold-divider)", background: "var(--fold-bg-secondary)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={record.imageUrl}
+              src={`${record.imageUrl}?v=${Date.now()}`}
               alt="Scanned card"
-              crossOrigin="anonymous"
-              style={{ width: "100%", height: "auto", maxHeight: 300, objectFit: "contain", display: "block" }}
+              referrerPolicy="no-referrer"
+              style={{ width: "100%", height: "auto", maxHeight: 400, objectFit: "contain", display: "block" }}
               onError={() => setImgError(true)}
             />
           </div>
@@ -101,7 +102,7 @@ export default function CaptureRecordDetailPage() {
           <div style={{ borderRadius: "var(--fold-radius-md)", border: "0.5px solid var(--fold-divider)", background: "var(--fold-bg-secondary)", padding: "var(--fold-space-6)", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--fold-space-2)" }}>
             <ImageOff size={24} color="var(--fold-text-tertiary)" />
             <span style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-tertiary)" }}>Image could not be loaded</span>
-            <a href={record.imageUrl} target="_blank" rel="noopener" style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-accent)" }}>Open directly</a>
+            <a href={record.imageUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-accent)" }}>Open directly</a>
           </div>
         ) : null}
 

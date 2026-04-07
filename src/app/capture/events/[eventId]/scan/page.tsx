@@ -151,44 +151,13 @@ export default function CaptureScanPage() {
     const ctx = c.getContext("2d");
     if (!ctx) return;
 
-    // The video uses objectFit: "cover" — the browser scales the video
-    // to fill the element, cropping overflow. We need to calculate what
-    // portion of the raw video is actually visible on screen.
-    const vw = v.videoWidth;   // raw video resolution
-    const vh = v.videoHeight;
-    const ew = v.clientWidth;  // element size on screen
-    const eh = v.clientHeight;
-
-    const videoAspect = vw / vh;
-    const elementAspect = ew / eh;
-
-    // Calculate the visible portion of the raw video
-    let visibleX = 0, visibleY = 0, visibleW = vw, visibleH = vh;
-
-    if (videoAspect > elementAspect) {
-      // Video is wider than element — cropped on left/right
-      visibleW = Math.floor(vh * elementAspect);
-      visibleX = Math.floor((vw - visibleW) / 2);
-      visibleH = vh;
-      visibleY = 0;
-    } else {
-      // Video is taller than element — cropped on top/bottom
-      visibleH = Math.floor(vw / elementAspect);
-      visibleY = Math.floor((vh - visibleH) / 2);
-      visibleW = vw;
-      visibleX = 0;
-    }
-
-    // Now apply viewfinder percentages to the VISIBLE portion
-    // Frame: top 18%, left 7.5%, right 7.5%, bottom 30.5%
-    const cropX = visibleX + Math.floor(visibleW * 0.075);
-    const cropY = visibleY + Math.floor(visibleH * 0.18);
-    const cropW = Math.floor(visibleW * 0.85);
-    const cropH = Math.floor(visibleH * 0.515);
-
-    c.width = cropW;
-    c.height = cropH;
-    ctx.drawImage(v, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+    // Capture the FULL video frame — no cropping.
+    // The viewfinder is a visual guide only. Gemini extracts text
+    // from the entire image regardless of framing.
+    // This avoids all objectFit:cover crop mismatch issues.
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    ctx.drawImage(v, 0, 0);
 
     // ─── Client-side quality check (instant, free) ───────────────
     const quality = checkImageQuality(c);
