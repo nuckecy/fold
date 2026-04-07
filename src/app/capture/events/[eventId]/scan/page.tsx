@@ -125,6 +125,14 @@ export default function CaptureScanPage() {
     try {
       const res = await fetch(`/api/events/${eventId}/scans`, { method: "POST", body: fd });
       const data = await res.json().catch(() => ({}));
+
+      // Image rejected — not a valid card
+      if (data.rejected) {
+        setUploadError(data.error || "This image was rejected. Please capture a registration card.");
+        setUploading(false);
+        return;
+      }
+
       if (res.ok) {
         setScanCount((c) => c + 1);
 

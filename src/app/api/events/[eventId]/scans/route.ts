@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { fldEvtMembers, fldEvtRecords } from "@/db/schema";
+import { fldEvtMembers, fldEvtRecords, fldEvtFieldSchemas, fldEvtFieldValues } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { logActivity } from "@/services/activity-log";
-import { uploadFile, scanKey } from "@/lib/storage";
+import { uploadFile, deleteFile, scanKey } from "@/lib/storage";
 import { extractFromImage } from "@/services/ai-extraction";
-import { fldEvtFieldSchemas, fldEvtFieldValues } from "@/db/schema";
+import { validateFileBasics, preScreenImage, validateExtractionResults } from "@/services/image-validation";
 
 // GET /api/events/:eventId/scans — Get scan count
 export async function GET(
@@ -64,7 +64,7 @@ export async function POST(
 
   const { eventId } = await params;
 
-  // Verify membership (admin or scanner)
+  // Verify membership
   const [membership] = await db
     .select()
     .from(fldEvtMembers)
@@ -97,17 +97,37 @@ export async function POST(
     );
   }
 
-  // UUID-based filename (N6: no original filenames preserved)
+  // ─── LAYER 1: File basics ──────────────────────────────────────────
+  const basicCheck = validateFileBasics(file);
+  if (!basicCheck.valid) {
+    return NextResponse.json(
+      { error: basicCheck.reason, rejected: true },
+      { status: 400 }
+    );
+  }
+
+  // Read file bytes once (reused for screening, upload, and extraction)
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const base64 = Buffer.from(bytes).toString("base64");
+
+  // ─── LAYER 2: AI pre-screening ────────────────────────────────────
+  const screenCheck = await preScreenImage(base64, file.type);
+  if (!screenCheck.valid) {
+    return NextResponse.json(
+      { error: screenCheck.reason, rejected: true },
+      { status: 422 }
+    );
+  }
+
+  // ─── UPLOAD TO R2 ─────────────────────────────────────────────────
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${crypto.randomUUID()}.${ext}`;
   const key = scanKey(eventId, filename);
 
   try {
-    // Upload to R2
-    const bytes = new Uint8Array(await file.arrayBuffer());
     const imageUrl = await uploadFile(key, bytes, file.type);
 
-    // Create record — one image = one record, always (D5)
+    // Create record
     const [record] = await db
       .insert(fldEvtRecords)
       .values({
@@ -127,8 +147,7 @@ export async function POST(
       metadata: { recordId: record.id, filename },
     });
 
-    // ─── Auto-trigger AI extraction ──────────────────────────────────
-    // Check if event has field schemas configured
+    // ─── AI EXTRACTION ───────────────────────────────────────────────
     const fieldSchemas = await db
       .select()
       .from(fldEvtFieldSchemas)
@@ -136,7 +155,6 @@ export async function POST(
 
     if (fieldSchemas.length > 0 && process.env.GEMINI_API_KEY) {
       try {
-        // Mark as processing
         await db
           .update(fldEvtRecords)
           .set({ status: "processing" })
@@ -145,6 +163,21 @@ export async function POST(
         const result = await extractFromImage(record.id, eventId, imageUrl);
 
         if (result.success) {
+          // ─── LAYER 3: Post-extraction validation ─────────────────
+          const extractionCheck = validateExtractionResults(result.fields);
+
+          if (!extractionCheck.valid) {
+            // No useful data — delete from R2 and DB to avoid bloat
+            await deleteFile(key);
+            await db.delete(fldEvtRecords).where(eq(fldEvtRecords.id, record.id));
+
+            return NextResponse.json(
+              { error: extractionCheck.reason, rejected: true },
+              { status: 422 }
+            );
+          }
+
+          // Save extracted fields
           const defectiveReasons: string[] = [];
           const fieldMap = new Map(fieldSchemas.map((f) => [f.fieldName, f]));
 
@@ -164,9 +197,8 @@ export async function POST(
             }
           }
 
-          // Check if email is missing (common defective reason)
-          const emailField = result.fields["email"];
-          if (!emailField?.value) {
+          // Check email specifically
+          if (!result.fields["email"]?.value) {
             if (!defectiveReasons.includes("missing_email")) {
               defectiveReasons.push("missing_email");
             }
@@ -184,7 +216,7 @@ export async function POST(
             { status: 201 }
           );
         } else {
-          // Extraction failed — mark as captured for manual review
+          // Extraction failed
           await db
             .update(fldEvtRecords)
             .set({ status: "defective", defectiveReasons: ["extraction_failed"], updatedAt: new Date() })
@@ -197,7 +229,6 @@ export async function POST(
         }
       } catch (extractErr: any) {
         console.error("[scans] Extraction error:", extractErr?.message);
-        // Upload succeeded but extraction failed — record stays as captured
         return NextResponse.json(
           { ...record, extraction: "error", error: extractErr?.message },
           { status: 201 }
@@ -205,7 +236,6 @@ export async function POST(
       }
     }
 
-    // No field schemas or no API key — return as-is
     return NextResponse.json(record, { status: 201 });
   } catch (err: any) {
     console.error("[scans] Upload error:", err?.message || err);
