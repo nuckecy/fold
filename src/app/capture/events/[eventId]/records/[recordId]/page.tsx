@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Camera, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 
 interface FieldData { id: string; fieldName: string; label: string; value: string | null; confidence: string | null; }
@@ -67,29 +66,47 @@ export default function CaptureRecordDetailPage() {
           </div>
         )}
 
-        {/* Editable fields */}
-        {fields.map((field) => {
-          const isError = record.defectiveReasons.some((r) => r.includes(field.fieldName || ""));
-          const confidenceLabel = field.confidence === "high" ? "High" : field.confidence === "low" ? "Low" : field.confidence === "medium" ? "Medium" : "";
+        {/* Valid fields (read-only) */}
+        {fields.filter((f) => !record.defectiveReasons.some((r) => r.includes(f.fieldName || "")) && f.value).length > 0 && (
+          <div style={{ background: "var(--fold-bg)", borderRadius: "var(--fold-radius-md)", overflow: "hidden", boxShadow: "var(--fold-shadow-card)" }}>
+            {fields
+              .filter((f) => !record.defectiveReasons.some((r) => r.includes(f.fieldName || "")) && f.value)
+              .map((field, i) => (
+                <div
+                  key={field.id}
+                  style={{
+                    padding: "var(--fold-space-3) var(--fold-space-4)",
+                    borderTop: i > 0 ? "0.5px solid var(--fold-divider)" : "none",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.03em", fontWeight: 500 }}>
+                    {field.label}
+                  </span>
+                  <span style={{ fontSize: "var(--fold-type-body)", color: "var(--fold-text-primary)", fontWeight: 500 }}>
+                    {field.value}
+                  </span>
+                </div>
+              ))}
+          </div>
+        )}
 
-          return (
+        {/* Defective fields (editable) */}
+        {fields
+          .filter((f) => record.defectiveReasons.some((r) => r.includes(f.fieldName || "")) || !f.value)
+          .map((field) => (
             <div key={field.id}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <label className="input-label" style={{ marginBottom: 0 }}>{field.label}</label>
-                {confidenceLabel && (
-                  <Badge variant={field.confidence === "high" ? "success" : field.confidence === "low" ? "error" : "warning"}>
-                    {confidenceLabel}
-                  </Badge>
-                )}
-              </div>
               <Input
+                label={field.label}
                 value={editValues[field.id] || ""}
                 onChange={(e) => setEditValues({ ...editValues, [field.id]: e.target.value })}
-                error={isError ? `${field.label} is missing` : undefined}
+                error={!editValues[field.id] ? `${field.label} is required` : undefined}
+                placeholder={`Enter ${field.label?.toLowerCase()}`}
               />
             </div>
-          );
-        })}
+          ))}
 
         {/* Info callout */}
         {fields.some((f) => f.fieldName?.includes("phone") && f.value) && (

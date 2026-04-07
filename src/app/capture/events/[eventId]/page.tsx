@@ -89,9 +89,9 @@ export default async function CaptureEventPage({
 
       {/* Metrics */}
       <div style={{ display: "flex", gap: "var(--fold-space-3)", padding: "0 var(--fold-space-5)", marginBottom: "var(--fold-space-6)" }}>
-        <MetricCard value={stats.total} label="records" />
-        <MetricCard value={`${stats.scans}/${stats.digital}`} label="scan/digital" />
-        <MetricCard value={stats.defective} label="flagged" valueColor={stats.defective > 0 ? "var(--fold-error)" : undefined} />
+        <MetricCard value={stats.total} label="records" href={`/capture/events/${eventId}/records?status=`} />
+        <MetricCard value={`${stats.scans}/${stats.digital}`} label="scan/digital" href={`/capture/events/${eventId}/scan`} />
+        <MetricCard value={stats.defective} label="flagged" valueColor={stats.defective > 0 ? "var(--fold-error)" : undefined} href={`/capture/events/${eventId}/records?status=defective`} />
       </div>
 
       {/* Actions */}

@@ -26,13 +26,28 @@ interface MetricCardProps {
   value: string | number;
   label: string;
   valueColor?: string;
+  href?: string;
 }
 
-export function MetricCard({ value, label, valueColor }: MetricCardProps) {
-  return (
-    <div className="metric-card" style={{ flex: 1 }}>
+export function MetricCard({ value, label, valueColor, href }: MetricCardProps) {
+  const content = (
+    <>
       <span className="value" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
       <span className="label">{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="metric-card" style={{ flex: 1, textDecoration: "none", color: "inherit" }}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="metric-card" style={{ flex: 1 }}>
+      {content}
     </div>
   );
 }

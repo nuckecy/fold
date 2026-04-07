@@ -6,74 +6,59 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 
-/* ─── Dual-thumb range slider ─────────────────────────────────────────────── */
+/* ─── Single-thumb slider ─────────────────────────────────────────────────── */
 
-const SLIDER_MIN = 0;
+const SLIDER_MIN = 1;
 const SLIDER_MAX = 5000;
 const SLIDER_STEP = 10;
 
-function DualRangeSlider({
-  minVal,
-  maxVal,
+function AttendeeSlider({
+  value,
   onChange,
 }: {
-  minVal: number;
-  maxVal: number;
-  onChange: (min: number, max: number) => void;
+  value: number;
+  onChange: (val: number) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef<"min" | "max" | null>(null);
+  const dragging = useRef(false);
 
   const pct = (v: number) =>
     ((v - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100;
 
   const valFromX = useCallback((clientX: number) => {
-    if (!trackRef.current) return 0;
+    if (!trackRef.current) return SLIDER_MIN;
     const rect = trackRef.current.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const raw = SLIDER_MIN + ratio * (SLIDER_MAX - SLIDER_MIN);
-    return Math.round(raw / SLIDER_STEP) * SLIDER_STEP;
+    return Math.max(SLIDER_MIN, Math.round(raw / SLIDER_STEP) * SLIDER_STEP);
   }, []);
 
-  const handlePointerDown =
-    (thumb: "min" | "max") => (e: React.PointerEvent) => {
-      e.preventDefault();
-      dragging.current = thumb;
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    };
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!dragging.current) return;
-      const v = valFromX(e.clientX);
-      if (dragging.current === "min") {
-        onChange(Math.min(v, maxVal - SLIDER_STEP), maxVal);
-      } else {
-        onChange(minVal, Math.max(v, minVal + SLIDER_STEP));
-      }
+      onChange(valFromX(e.clientX));
     },
-    [minVal, maxVal, onChange, valFromX]
+    [onChange, valFromX]
   );
 
   const handlePointerUp = useCallback(() => {
-    dragging.current = null;
+    dragging.current = false;
   }, []);
 
-  const handleKeyDown =
-    (thumb: "min" | "max") => (e: React.KeyboardEvent) => {
-      let delta = 0;
-      if (e.key === "ArrowRight" || e.key === "ArrowUp") delta = SLIDER_STEP;
-      if (e.key === "ArrowLeft" || e.key === "ArrowDown") delta = -SLIDER_STEP;
-      if (!delta) return;
-      e.preventDefault();
-      if (thumb === "min") {
-        const next = Math.max(SLIDER_MIN, Math.min(maxVal - SLIDER_STEP, minVal + delta));
-        onChange(next, maxVal);
-      } else {
-        const next = Math.min(SLIDER_MAX, Math.max(minVal + SLIDER_STEP, maxVal + delta));
-        onChange(minVal, next);
-      }
-    };
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    let delta = 0;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") delta = SLIDER_STEP;
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") delta = -SLIDER_STEP;
+    if (!delta) return;
+    e.preventDefault();
+    onChange(Math.max(SLIDER_MIN, Math.min(SLIDER_MAX, value + delta)));
+  };
 
   const thumbSize = 24;
 
@@ -83,76 +68,26 @@ function DualRangeSlider({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      {/* Track background */}
       <div
         ref={trackRef}
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: 0,
-          right: 0,
-          height: 4,
-          borderRadius: 2,
-          background: "var(--fold-border)",
-          transform: "translateY(-50%)",
-        }}
+        style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 4, borderRadius: 2, background: "var(--fold-border)", transform: "translateY(-50%)" }}
       />
-
-      {/* Active range */}
       <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: `${pct(minVal)}%`,
-          width: `${pct(maxVal) - pct(minVal)}%`,
-          height: 4,
-          borderRadius: 2,
-          background: "var(--fold-accent)",
-          transform: "translateY(-50%)",
-        }}
+        style={{ position: "absolute", top: "50%", left: 0, width: `${pct(value)}%`, height: 4, borderRadius: 2, background: "var(--fold-accent)", transform: "translateY(-50%)" }}
       />
-
-      {/* Min thumb */}
       <div
         role="slider"
         tabIndex={0}
-        aria-label="Minimum expected attendees"
+        aria-label="Expected attendees"
         aria-valuemin={SLIDER_MIN}
         aria-valuemax={SLIDER_MAX}
-        aria-valuenow={minVal}
-        onPointerDown={handlePointerDown("min")}
-        onKeyDown={handleKeyDown("min")}
+        aria-valuenow={value}
+        onPointerDown={handlePointerDown}
+        onKeyDown={handleKeyDown}
         style={{
           position: "absolute",
           top: "50%",
-          left: `${pct(minVal)}%`,
-          width: thumbSize,
-          height: thumbSize,
-          borderRadius: "50%",
-          background: "#FFFFFF",
-          border: "2px solid var(--fold-text-primary)",
-          transform: "translate(-50%, -50%)",
-          cursor: "grab",
-          zIndex: minVal > SLIDER_MAX - SLIDER_STEP * 2 ? 5 : 3,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-          outline: "none",
-        }}
-      />
-
-      {/* Max thumb */}
-      <div
-        role="slider"
-        tabIndex={0}
-        aria-label="Maximum expected attendees"
-        aria-valuemin={SLIDER_MIN}
-        aria-valuemax={SLIDER_MAX}
-        aria-valuenow={maxVal}
-        onPointerDown={handlePointerDown("max")}
-        onKeyDown={handleKeyDown("max")}
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: `${pct(maxVal)}%`,
+          left: `${pct(value)}%`,
           width: thumbSize,
           height: thumbSize,
           borderRadius: "50%",
@@ -177,15 +112,15 @@ export default function CaptureNewEventPage() {
     title: "",
     date: "",
     description: "",
-    expectedAttendeesMin: 50,
+    expectedAttendeesMin: 1,
     expectedAttendeesMax: 200,
     primaryLanguage: "en",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function updateAttendees(min: number, max: number) {
-    setForm((prev) => ({ ...prev, expectedAttendeesMin: min, expectedAttendeesMax: max }));
+  function updateAttendees(max: number) {
+    setForm((prev) => ({ ...prev, expectedAttendeesMax: max }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -244,13 +179,12 @@ export default function CaptureNewEventPage() {
               Expected attendees
             </span>
             <span style={{ fontSize: "var(--fold-type-body)", fontWeight: 600, color: "var(--fold-text-primary)", fontVariantNumeric: "tabular-nums" }}>
-              {form.expectedAttendeesMin} &mdash; {form.expectedAttendeesMax}
+              {form.expectedAttendeesMax}
             </span>
           </div>
 
-          <DualRangeSlider
-            minVal={form.expectedAttendeesMin}
-            maxVal={form.expectedAttendeesMax}
+          <AttendeeSlider
+            value={form.expectedAttendeesMax}
             onChange={updateAttendees}
           />
 
