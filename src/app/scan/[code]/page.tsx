@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ export default function ScannerJoinPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const [phase, setPhase] = useState<Phase>("join");
   const [email, setEmail] = useState("");
@@ -45,11 +46,8 @@ export default function ScannerJoinPage() {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
-        setCameraActive(true);
-      }
+      streamRef.current = stream;
+      setCameraActive(true);
     } catch (err: any) {
       if (err?.name === "NotAllowedError") {
         setCameraError("Camera permission denied. Please allow camera access.");
@@ -60,6 +58,14 @@ export default function ScannerJoinPage() {
       }
     }
   }
+
+  // Attach stream to video element AFTER it renders
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
+    }
+  }, [cameraActive]);
 
   async function capturePhoto() {
     if (!videoRef.current || !canvasRef.current) return;

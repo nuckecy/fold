@@ -23,11 +23,19 @@ export default function JoinSessionPage() {
         video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
+      // Try attaching immediately if video element exists
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
       }
       setScanning(true);
+      // Also try after next render in case videoRef wasn't ready
+      requestAnimationFrame(() => {
+        if (videoRef.current && streamRef.current && !videoRef.current.srcObject) {
+          videoRef.current.srcObject = streamRef.current;
+          videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
+        }
+      });
     } catch (err: any) {
       if (err?.name === "NotAllowedError") {
         setError("Camera permission denied. Please allow camera access in your browser settings.");

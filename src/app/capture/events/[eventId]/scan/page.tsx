@@ -12,6 +12,7 @@ export default function CaptureScanPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const [cameraActive, setCameraActive] = useState(false);
   const [scanCount, setScanCount] = useState(0);
@@ -41,11 +42,8 @@ export default function CaptureScanPage() {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
-        setCameraActive(true);
-      }
+      streamRef.current = stream;
+      setCameraActive(true); // triggers re-render with <video> element
     } catch (err: any) {
       if (err?.name === "NotAllowedError") {
         setCameraError("Camera permission denied. Please allow camera access in your browser settings.");
@@ -57,8 +55,18 @@ export default function CaptureScanPage() {
     }
   }
 
+  // Attach stream to video element AFTER it renders
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
+    }
+  }, [cameraActive]);
+
   function stopCamera() {
-    if (videoRef.current?.srcObject) { (videoRef.current.srcObject as MediaStream).getTracks().forEach((t) => t.stop()); videoRef.current.srcObject = null; }
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
     setCameraActive(false);
   }
 

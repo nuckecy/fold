@@ -17,6 +17,7 @@ export default function ScanPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const [phase, setPhase] = useState<Phase>("setup");
   const [expectedCount, setExpectedCount] = useState("");
@@ -81,11 +82,8 @@ export default function ScanPage() {
           height: { ideal: 1080 },
         },
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
-        setCameraActive(true);
-      }
+      streamRef.current = stream;
+      setCameraActive(true);
     } catch {
       setCameraError(
         "Could not access camera. Please check your browser permissions and try again, or use gallery upload instead."
@@ -93,12 +91,18 @@ export default function ScanPage() {
     }
   }
 
-  function stopCamera() {
-    if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach((t) => t.stop());
-      videoRef.current.srcObject = null;
+  // Attach stream to video element AFTER it renders
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
     }
+  }, [cameraActive]);
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
     setCameraActive(false);
   }
 
