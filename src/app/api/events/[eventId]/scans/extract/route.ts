@@ -69,9 +69,12 @@ export async function POST(
   await db.update(fldEvtRecords).set({ status: "processing" }).where(eq(fldEvtRecords.id, recordId));
 
   try {
+    console.log(`[extract] Starting extraction for record ${recordId}, image: ${record.imageUrl?.slice(0, 80)}`);
     const result = await extractFromImage(recordId, eventId, record.imageUrl);
+    console.log(`[extract] Result: success=${result.success}, provider=${result.provider}, latency=${result.latencyMs}ms, fields=${Object.keys(result.fields).length}`);
 
     if (!result.success) {
+      console.log(`[extract] Failed: ${result.error}`);
       await db.update(fldEvtRecords).set({
         status: "defective",
         defectiveReasons: ["extraction_failed"],

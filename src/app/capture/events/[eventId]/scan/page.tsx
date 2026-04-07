@@ -80,24 +80,35 @@ export default function CaptureScanPage() {
     if (!videoRef.current || !canvasRef.current) return;
     const v = videoRef.current;
     const c = canvasRef.current;
-    c.width = v.videoWidth;
-    c.height = v.videoHeight;
-    c.getContext("2d")?.drawImage(v, 0, 0);
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+
+    // Crop to the viewfinder frame (matching the corner markers)
+    // Frame: top 20%, left 8%, right 8%, bottom 30%
+    const vw = v.videoWidth;
+    const vh = v.videoHeight;
+    const cropX = Math.floor(vw * 0.08);
+    const cropY = Math.floor(vh * 0.20);
+    const cropW = Math.floor(vw * 0.84); // 1 - 0.08 - 0.08
+    const cropH = Math.floor(vh * 0.50); // 1 - 0.20 - 0.30
+
+    c.width = cropW;
+    c.height = cropH;
+    ctx.drawImage(v, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
     // ─── Client-side quality check (instant, free) ───────────────
     const quality = checkImageQuality(c);
     if (!quality.pass) {
       setUploadError(quality.reason || "Image quality too low.");
-      // Brief flash of the error, then auto-dismiss after 2s
       setTimeout(() => setUploadError(""), 2500);
-      return; // Don't proceed to preview — stay on camera
+      return;
     }
 
-    // Generate preview URL
+    // Generate preview URL (cropped)
     const dataUrl = c.toDataURL("image/jpeg", 0.92);
     setPreviewUrl(dataUrl);
 
-    // Generate blob for upload
+    // Generate blob for upload (cropped)
     c.toBlob((blob) => {
       if (blob) setCapturedBlob(blob);
     }, "image/jpeg", 0.92);
