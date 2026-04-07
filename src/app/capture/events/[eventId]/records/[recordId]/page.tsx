@@ -60,9 +60,12 @@ export default function CaptureRecordDetailPage() {
       <div style={{ padding: "0 var(--fold-space-5)", display: "flex", flexDirection: "column", gap: "var(--fold-space-4)" }}>
         {/* Image preview */}
         {record.imageUrl && (
-          <div style={{ background: "var(--fold-bg-secondary)", border: "0.5px solid var(--fold-divider)", borderRadius: "var(--fold-radius-md)", height: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--fold-space-1)" }}>
-            <Camera size={24} color="var(--fold-text-tertiary)" />
-            <span style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-tertiary)" }}>Tap to expand</span>
+          <div style={{ borderRadius: "var(--fold-radius-md)", overflow: "hidden", border: "0.5px solid var(--fold-divider)", background: "var(--fold-bg-secondary)" }}>
+            <img
+              src={record.imageUrl}
+              alt="Scanned card"
+              style={{ width: "100%", height: "auto", maxHeight: 300, objectFit: "contain", display: "block" }}
+            />
           </div>
         )}
 

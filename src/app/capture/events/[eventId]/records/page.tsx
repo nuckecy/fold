@@ -100,11 +100,13 @@ function RecordsList() {
         ) : (
           <div style={{ background: "var(--fold-bg)", borderRadius: "var(--fold-radius-md)", overflow: "hidden", boxShadow: "var(--fold-shadow-card)" }}>
             {filteredRecords.map((r, i) => {
-              const contactName = getField(r, "name") || "Unknown";
+              const contactName = getField(r, "name");
               const email = getField(r, "email");
               const phone = getField(r, "phone");
               const hasMissingEmail = r.defectiveReasons.some((d) => d.includes("missing_email"));
               const hasMalformed = r.defectiveReasons.some((d) => d.includes("malformed"));
+              const isUnprocessed = r.status === "captured" && r.fields.length === 0;
+              const timeAgo = new Date(r.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
               return (
                 <Link
@@ -121,16 +123,24 @@ function RecordsList() {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "var(--fold-type-body)", fontWeight: 600, color: "var(--fold-text-primary)" }}>{contactName}</span>
-                    <span style={{ fontSize: "var(--fold-type-caption)", color: hasMalformed ? "var(--fold-accent)" : "var(--fold-error)", fontWeight: 500 }}>
-                      {hasMalformed ? "Malformed" : "Missing email"}
+                    <span style={{ fontSize: "var(--fold-type-body)", fontWeight: 600, color: "var(--fold-text-primary)" }}>
+                      {contactName || (isUnprocessed ? `Scan · ${timeAgo}` : "Unknown")}
+                    </span>
+                    <span style={{ fontSize: "var(--fold-type-caption)", fontWeight: 500, color: isUnprocessed ? "var(--fold-text-tertiary)" : hasMalformed ? "var(--fold-accent)" : "var(--fold-error)" }}>
+                      {isUnprocessed ? "Awaiting processing" : hasMalformed ? "Malformed" : "Missing email"}
                     </span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-1)", fontSize: "var(--fold-type-subhead)", color: hasMissingEmail ? "var(--fold-error)" : "var(--fold-text-secondary)" }}>
-                    {hasMissingEmail ? <X size={12} /> : <Check size={12} />}
-                    <span>{email || "No email captured"}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-1)", fontSize: "var(--fold-type-subhead)", color: isUnprocessed ? "var(--fold-text-tertiary)" : hasMissingEmail ? "var(--fold-error)" : "var(--fold-text-secondary)" }}>
+                    {isUnprocessed ? (
+                      <span>{r.captureMethod === "scan" ? "Scanned card" : "Digital submission"} · Tap to view</span>
+                    ) : (
+                      <>
+                        {hasMissingEmail ? <X size={12} /> : <Check size={12} />}
+                        <span>{email || "No email captured"}</span>
+                      </>
+                    )}
                   </div>
-                  {phone && (
+                  {phone && !isUnprocessed && (
                     <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-1)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>
                       <Phone size={12} />
                       <span>{phone}</span>
