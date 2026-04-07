@@ -18,50 +18,54 @@ function RecordsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch ALL defective + captured (flagged) records for counts
-    fetch(`/api/events/${eventId}/records?status=defective`)
+    // Fetch ALL records (no status filter)
+    fetch(`/api/events/${eventId}/records`)
       .then((r) => r.json())
-      .then((defective) => {
-        fetch(`/api/events/${eventId}/records?status=captured`)
-          .then((r) => r.json())
-          .then((captured) => {
-            setAllRecords([...defective, ...captured]);
-            setLoading(false);
-          });
-      });
+      .then((records) => {
+        setAllRecords(records);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, [eventId]);
 
   function getField(record: EventRecord, name: string) {
     return record.fields.find((f) => f.fieldName?.includes(name))?.value || null;
   }
 
-  const missingEmailCount = useMemo(() =>
-    allRecords.filter((r) => r.defectiveReasons.some((d) => d.includes("missing_email"))).length,
+  const processedCount = useMemo(() =>
+    allRecords.filter((r) => r.status === "processed" || r.status === "reviewed").length,
     [allRecords]
   );
 
-  const malformedCount = useMemo(() =>
-    allRecords.filter((r) => r.defectiveReasons.some((d) => d.includes("malformed"))).length,
+  const defectiveCount = useMemo(() =>
+    allRecords.filter((r) => r.status === "defective").length,
+    [allRecords]
+  );
+
+  const capturedCount = useMemo(() =>
+    allRecords.filter((r) => r.status === "captured").length,
     [allRecords]
   );
 
   const filteredRecords = useMemo(() => {
     if (!status || status === "all") return allRecords;
-    if (status === "defective") return allRecords.filter((r) => r.defectiveReasons.some((d) => d.includes("missing_email")));
-    if (status === "captured") return allRecords.filter((r) => r.defectiveReasons.some((d) => d.includes("malformed")));
+    if (status === "processed") return allRecords.filter((r) => r.status === "processed" || r.status === "reviewed");
+    if (status === "defective") return allRecords.filter((r) => r.status === "defective");
+    if (status === "captured") return allRecords.filter((r) => r.status === "captured");
     return allRecords;
   }, [allRecords, status]);
 
   const filters = [
     { key: "all", label: `All (${allRecords.length})` },
-    { key: "defective", label: `Missing email (${missingEmailCount})` },
-    { key: "captured", label: `Malformed (${malformedCount})` },
+    { key: "processed", label: `Processed (${processedCount})` },
+    { key: "defective", label: `Flagged (${defectiveCount})` },
+    { key: "captured", label: `Pending (${capturedCount})` },
   ];
 
   if (loading) {
     return (
       <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
-        <PageHeader title="Flagged records" back={`/capture/events/${eventId}`} />
+        <PageHeader title="Records" back={`/capture/events/${eventId}`} />
         <div style={{ padding: "var(--fold-space-10)", textAlign: "center" }}>
           <p style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>Loading...</p>
         </div>
@@ -71,7 +75,7 @@ function RecordsList() {
 
   return (
     <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
-      <PageHeader title="Flagged records" back={`/capture/events/${eventId}`} badge={allRecords.length > 0 ? allRecords.length : undefined} />
+      <PageHeader title="Records" back={`/capture/events/${eventId}`} badge={allRecords.length > 0 ? allRecords.length : undefined} />
 
       {/* Filter pills */}
       <div style={{ display: "flex", gap: "var(--fold-space-2)", padding: "0 var(--fold-space-5) var(--fold-space-4)", overflowX: "auto" }}>
@@ -95,7 +99,7 @@ function RecordsList() {
       <div style={{ padding: "0 var(--fold-space-5)" }}>
         {filteredRecords.length === 0 ? (
           <div style={{ textAlign: "center", padding: "var(--fold-space-10) 0" }}>
-            <p style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>No flagged records</p>
+            <p style={{ fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>No records found</p>
           </div>
         ) : (
           <div style={{ background: "var(--fold-bg)", borderRadius: "var(--fold-radius-md)", overflow: "hidden", boxShadow: "var(--fold-shadow-card)" }}>
@@ -103,10 +107,20 @@ function RecordsList() {
               const contactName = getField(r, "name");
               const email = getField(r, "email");
               const phone = getField(r, "phone");
-              const hasMissingEmail = r.defectiveReasons.some((d) => d.includes("missing_email"));
-              const hasMalformed = r.defectiveReasons.some((d) => d.includes("malformed"));
+              const hasMissingEmail = r.defectiveReasons?.some((d) => d.includes("missing_email"));
+              const hasMalformed = r.defectiveReasons?.some((d) => d.includes("malformed"));
               const isUnprocessed = r.status === "captured" && r.fields.length === 0;
+              const isProcessed = r.status === "processed" || r.status === "reviewed";
               const timeAgo = new Date(r.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+              // Status label and color
+              let statusLabel = "Unknown";
+              let statusColor = "var(--fold-text-tertiary)";
+              if (isProcessed) { statusLabel = "Processed"; statusColor = "#22C55E"; }
+              else if (isUnprocessed) { statusLabel = "Pending"; statusColor = "var(--fold-text-tertiary)"; }
+              else if (hasMalformed) { statusLabel = "Malformed"; statusColor = "var(--fold-accent)"; }
+              else if (hasMissingEmail) { statusLabel = "Missing email"; statusColor = "var(--fold-error)"; }
+              else if (r.status === "defective") { statusLabel = "Flagged"; statusColor = "var(--fold-error)"; }
 
               return (
                 <Link
@@ -126,16 +140,16 @@ function RecordsList() {
                     <span style={{ fontSize: "var(--fold-type-body)", fontWeight: 600, color: "var(--fold-text-primary)" }}>
                       {contactName || (isUnprocessed ? `Scan · ${timeAgo}` : "Unknown")}
                     </span>
-                    <span style={{ fontSize: "var(--fold-type-caption)", fontWeight: 500, color: isUnprocessed ? "var(--fold-text-tertiary)" : hasMalformed ? "var(--fold-accent)" : "var(--fold-error)" }}>
-                      {isUnprocessed ? "Awaiting processing" : hasMalformed ? "Malformed" : "Missing email"}
+                    <span style={{ fontSize: "var(--fold-type-caption)", fontWeight: 500, color: statusColor }}>
+                      {statusLabel}
                     </span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-1)", fontSize: "var(--fold-type-subhead)", color: isUnprocessed ? "var(--fold-text-tertiary)" : hasMissingEmail ? "var(--fold-error)" : "var(--fold-text-secondary)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-1)", fontSize: "var(--fold-type-subhead)", color: isProcessed ? "var(--fold-text-secondary)" : isUnprocessed ? "var(--fold-text-tertiary)" : hasMissingEmail ? "var(--fold-error)" : "var(--fold-text-secondary)" }}>
                     {isUnprocessed ? (
                       <span>{r.captureMethod === "scan" ? "Scanned card" : "Digital submission"} · Tap to view</span>
                     ) : (
                       <>
-                        {hasMissingEmail ? <X size={12} /> : <Check size={12} />}
+                        {isProcessed ? <Check size={12} color="#22C55E" /> : hasMissingEmail ? <X size={12} /> : <Check size={12} />}
                         <span>{email || "No email captured"}</span>
                       </>
                     )}

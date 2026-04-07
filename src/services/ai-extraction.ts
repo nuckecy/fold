@@ -62,7 +62,7 @@ async function extractWithGemini(
   const start = Date.now();
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -94,7 +94,7 @@ async function extractWithGemini(
     return {
       success: false,
       fields: {},
-      provider: "gemini-2.0-flash",
+      provider: "gemini-2.5-flash",
       latencyMs,
       error,
     };
@@ -111,7 +111,7 @@ async function extractWithGemini(
     return {
       success: true,
       fields: parsed.fields || {},
-      provider: "gemini-2.0-flash",
+      provider: "gemini-2.5-flash",
       tokensUsed,
       latencyMs,
     };
@@ -119,7 +119,7 @@ async function extractWithGemini(
     return {
       success: false,
       fields: {},
-      provider: "gemini-2.0-flash",
+      provider: "gemini-2.5-flash",
       tokensUsed,
       latencyMs,
       error: "Failed to parse AI response",
