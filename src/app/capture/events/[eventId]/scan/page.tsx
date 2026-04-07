@@ -2,10 +2,11 @@
 
 import { useParams } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
-import { Upload } from "lucide-react";
+import { Upload, X, Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { savePendingScan, getPendingScanCount, syncPendingScans, type PendingScan } from "@/lib/offline-store";
+
+type ScanPhase = "setup" | "camera" | "preview";
 
 export default function CaptureScanPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -14,89 +15,153 @@ export default function CaptureScanPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [cameraActive, setCameraActive] = useState(false);
+  const [phase, setPhase] = useState<ScanPhase>("setup");
   const [scanCount, setScanCount] = useState(0);
-  const [expectedCount] = useState(30);
   const [uploading, setUploading] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [cameraError, setCameraError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
+  const [uploadError, setUploadError] = useState("");
 
+  // Fetch existing scan count
   useEffect(() => {
-    fetch(`/api/events/${eventId}/scans`).then((r) => r.json()).then((d) => setScanCount(d.total || 0)).catch(() => {});
-    if (typeof indexedDB !== "undefined") getPendingScanCount().then(setPendingCount).catch(() => {});
-    setIsOnline(navigator.onLine);
-    const on = () => { setIsOnline(true); syncPendingScans().then((r) => { setScanCount((c) => c + r.synced); getPendingScanCount().then(setPendingCount); }); };
-    const off = () => setIsOnline(false);
-    window.addEventListener("online", on);
-    window.addEventListener("offline", off);
-    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+    fetch(`/api/events/${eventId}/scans`)
+      .then((r) => r.json())
+      .then((d) => setScanCount(d.total || 0))
+      .catch(() => {});
   }, [eventId]);
 
-  const [cameraError, setCameraError] = useState("");
+  // ─── Camera controls ──────────────────────────────────────────────
 
   async function startCamera() {
     setCameraError("");
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraError("Camera is not available. HTTPS is required for camera access on deployed apps.");
+      setCameraError("Camera is not available. HTTPS is required for camera access.");
       return;
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+      });
       streamRef.current = stream;
-      setCameraActive(true); // triggers re-render with <video> element
+      setPhase("camera");
     } catch (err: any) {
       if (err?.name === "NotAllowedError") {
         setCameraError("Camera permission denied. Please allow camera access in your browser settings.");
       } else if (err?.name === "NotFoundError") {
         setCameraError("No camera found on this device.");
       } else {
-        setCameraError("Could not access camera. Please check permissions or use gallery upload instead.");
+        setCameraError("Could not access camera. Please check permissions or use gallery upload.");
       }
     }
   }
 
-  // Attach stream to video element AFTER it renders
+  // Attach stream after video element renders
   useEffect(() => {
-    if (cameraActive && videoRef.current && streamRef.current) {
+    if (phase === "camera" && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
       videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
     }
-  }, [cameraActive]);
+  }, [phase]);
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
-    setCameraActive(false);
+    setPhase("setup");
   }
 
-  async function capturePhoto() {
+  // ─── Capture ──────────────────────────────────────────────────────
+
+  function capturePhoto() {
     if (!videoRef.current || !canvasRef.current) return;
-    const v = videoRef.current, c = canvasRef.current;
-    c.width = v.videoWidth; c.height = v.videoHeight;
+    const v = videoRef.current;
+    const c = canvasRef.current;
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
     c.getContext("2d")?.drawImage(v, 0, 0);
-    c.toBlob(async (blob) => {
-      if (!blob) return;
-      await uploadOrQueue(new File([blob], `cap-${Date.now()}.jpg`, { type: "image/jpeg" }), "camera");
-    }, "image/jpeg", 0.9);
+
+    // Generate preview URL
+    const dataUrl = c.toDataURL("image/jpeg", 0.92);
+    setPreviewUrl(dataUrl);
+
+    // Generate blob for upload
+    c.toBlob((blob) => {
+      if (blob) setCapturedBlob(blob);
+    }, "image/jpeg", 0.92);
+
+    // Pause the live feed (keep stream alive for retake)
+    v.pause();
+    setPhase("preview");
   }
 
-  async function uploadOrQueue(file: File, source: string) {
-    if (!isOnline) {
-      await savePendingScan({ id: crypto.randomUUID(), eventId: eventId!, imageBlob: file, sourceDetail: source, capturedAt: Date.now(), retryCount: 0 });
-      setPendingCount((c) => c + 1); setScanCount((c) => c + 1); return;
+  // ─── Retake ───────────────────────────────────────────────────────
+
+  function retake() {
+    setPreviewUrl(null);
+    setCapturedBlob(null);
+    setUploadError("");
+    // Resume the video
+    if (videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play();
     }
+    setPhase("camera");
+  }
+
+  // ─── Confirm & Upload ─────────────────────────────────────────────
+
+  async function confirmAndUpload() {
+    if (!capturedBlob) return;
     setUploading(true);
-    const fd = new FormData(); fd.append("image", file); fd.append("sourceDetail", source);
+    setUploadError("");
+
+    const file = new File([capturedBlob], `scan-${Date.now()}.jpg`, { type: "image/jpeg" });
+    const fd = new FormData();
+    fd.append("image", file);
+    fd.append("sourceDetail", "camera");
+
     try {
       const res = await fetch(`/api/events/${eventId}/scans`, { method: "POST", body: fd });
-      if (res.ok) setScanCount((c) => c + 1);
-    } catch { await savePendingScan({ id: crypto.randomUUID(), eventId: eventId!, imageBlob: file, sourceDetail: source, capturedAt: Date.now(), retryCount: 0 }); setPendingCount((c) => c + 1); setScanCount((c) => c + 1); }
+      if (res.ok) {
+        setScanCount((c) => c + 1);
+        // Success — go back to camera for next capture
+        setPreviewUrl(null);
+        setCapturedBlob(null);
+        if (videoRef.current && streamRef.current) {
+          videoRef.current.srcObject = streamRef.current;
+          videoRef.current.play();
+        }
+        setPhase("camera");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setUploadError(data.error || "Upload failed. Try again.");
+      }
+    } catch {
+      setUploadError("Network error. Check your connection and try again.");
+    }
     setUploading(false);
   }
 
-  // Pre-scan setup
-  if (!cameraActive) {
+  // ─── Gallery upload ───────────────────────────────────────────────
+
+  async function handleGalleryUpload(files: FileList) {
+    for (const file of Array.from(files)) {
+      setUploading(true);
+      const fd = new FormData();
+      fd.append("image", file);
+      fd.append("sourceDetail", "gallery");
+      try {
+        const res = await fetch(`/api/events/${eventId}/scans`, { method: "POST", body: fd });
+        if (res.ok) setScanCount((c) => c + 1);
+      } catch {}
+      setUploading(false);
+    }
+  }
+
+  // ═══ SETUP PHASE ══════════════════════════════════════════════════
+
+  if (phase === "setup") {
     return (
       <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
         <PageHeader title="Scan cards" back={`/capture/events/${eventId}`} />
@@ -107,61 +172,173 @@ export default function CaptureScanPage() {
               {cameraError}
             </div>
           )}
+
+          {scanCount > 0 && (
+            <div style={{ textAlign: "center", padding: "var(--fold-space-2) 0", fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>
+              {scanCount} card{scanCount !== 1 ? "s" : ""} captured
+            </div>
+          )}
+
           <Button onClick={startCamera}>Start scanning</Button>
 
-          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={(e) => { if (e.target.files) Array.from(e.target.files).forEach((f) => uploadOrQueue(f, "gallery")); e.target.value = ""; }} style={{ display: "none" }} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => { if (e.target.files) handleGalleryUpload(e.target.files); e.target.value = ""; }}
+            style={{ display: "none" }}
+          />
           <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
             Upload from gallery
           </Button>
-
-          {pendingCount > 0 && (
-            <div style={{ background: "var(--fold-info-light)", padding: "var(--fold-space-3) var(--fold-space-4)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-info)" }}>
-              {pendingCount} scan{pendingCount > 1 ? "s" : ""} waiting to sync
-            </div>
-          )}
         </div>
       </div>
     );
   }
 
-  // Camera viewfinder
+  // ═══ PREVIEW PHASE ════════════════════════════════════════════════
+
+  if (phase === "preview" && previewUrl) {
+    return (
+      <div style={{ background: "#1A1A2E", height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
+        {/* Captured image preview */}
+        <img
+          src={previewUrl}
+          alt="Captured card"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+        />
+
+        {/* Overlay gradient for readability */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "40%", background: "linear-gradient(transparent, rgba(0,0,0,0.7))", zIndex: 5 }} />
+
+        {/* Top bar */}
+        <div style={{ position: "relative", zIndex: 10, padding: "52px var(--fold-space-5) 0" }}>
+          <span style={{ color: "rgba(255,255,255,0.9)", fontSize: "var(--fold-type-subhead)", fontWeight: 500 }}>
+            Review capture
+          </span>
+        </div>
+
+        {/* Upload error */}
+        {uploadError && (
+          <div style={{ position: "relative", zIndex: 10, margin: "var(--fold-space-3) var(--fold-space-5) 0", background: "rgba(192,57,43,0.9)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "#fff" }}>
+            {uploadError}
+          </div>
+        )}
+
+        {/* Bottom actions */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10, padding: "0 var(--fold-space-5) var(--fold-space-8)" }}>
+          {/* Status text */}
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "var(--fold-type-footnote)", textAlign: "center", marginBottom: "var(--fold-space-4)" }}>
+            {uploading ? "Uploading..." : "Is the card clearly visible and within frame?"}
+          </p>
+
+          {/* Progress bar during upload */}
+          {uploading && (
+            <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.2)", marginBottom: "var(--fold-space-4)", overflow: "hidden" }}>
+              <div style={{ height: "100%", borderRadius: 2, background: "var(--fold-accent)", width: "100%", animation: "progress 1.5s ease-in-out infinite" }} />
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "var(--fold-space-4)", justifyContent: "center" }}>
+            {/* Retake */}
+            <button
+              onClick={retake}
+              disabled={uploading}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--fold-space-1)",
+                background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.9)",
+                opacity: uploading ? 0.4 : 1,
+              }}
+            >
+              <div style={{ width: 56, height: 56, borderRadius: "var(--fold-radius-full)", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <RotateCcw size={22} />
+              </div>
+              <span style={{ fontSize: "var(--fold-type-caption)", fontWeight: 500 }}>Retake</span>
+            </button>
+
+            {/* Confirm */}
+            <button
+              onClick={confirmAndUpload}
+              disabled={uploading}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--fold-space-1)",
+                background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.9)",
+                opacity: uploading ? 0.4 : 1,
+              }}
+            >
+              <div style={{ width: 56, height: 56, borderRadius: "var(--fold-radius-full)", background: "var(--fold-accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Check size={24} color="#fff" strokeWidth={2.5} />
+              </div>
+              <span style={{ fontSize: "var(--fold-type-caption)", fontWeight: 500 }}>Confirm</span>
+            </button>
+          </div>
+        </div>
+
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+      </div>
+    );
+  }
+
+  // ═══ CAMERA PHASE ═════════════════════════════════════════════════
+
   return (
     <div style={{ background: "#1A1A2E", height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
       <video ref={videoRef} autoPlay playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
       {/* Viewfinder rectangle */}
-      <div style={{ position: "absolute", top: "28%", left: "14%", right: "14%", bottom: "30%", border: "2px solid rgba(255,255,255,0.3)", borderRadius: "var(--fold-radius-sm)" }} />
+      <div style={{ position: "absolute", top: "20%", left: "8%", right: "8%", bottom: "30%", border: "2px solid rgba(255,255,255,0.4)", borderRadius: "var(--fold-radius-md)", pointerEvents: "none" }} />
+
+      {/* Corner markers */}
+      <div style={{ position: "absolute", top: "20%", left: "8%", width: 24, height: 24, borderTop: "3px solid var(--fold-accent)", borderLeft: "3px solid var(--fold-accent)", borderRadius: "2px 0 0 0" }} />
+      <div style={{ position: "absolute", top: "20%", right: "8%", width: 24, height: 24, borderTop: "3px solid var(--fold-accent)", borderRight: "3px solid var(--fold-accent)", borderRadius: "0 2px 0 0" }} />
+      <div style={{ position: "absolute", bottom: "30%", left: "8%", width: 24, height: 24, borderBottom: "3px solid var(--fold-accent)", borderLeft: "3px solid var(--fold-accent)", borderRadius: "0 0 0 2px" }} />
+      <div style={{ position: "absolute", bottom: "30%", right: "8%", width: 24, height: 24, borderBottom: "3px solid var(--fold-accent)", borderRight: "3px solid var(--fold-accent)", borderRadius: "0 0 2px 0" }} />
+
+      {/* Hint text */}
+      <div style={{ position: "absolute", top: "15%", left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
+        <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "var(--fold-type-footnote)", fontWeight: 500 }}>
+          Align the card within the frame
+        </span>
+      </div>
 
       {/* Top bar */}
-      <div style={{ position: "relative", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "52px var(--fold-space-4) 0" }}>
-        <button onClick={stopCamera} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.9)", fontSize: "var(--fold-type-headline)", fontWeight: 500, cursor: "pointer" }}>
-          Done
+      <div style={{ position: "relative", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "52px var(--fold-space-5) 0" }}>
+        <button onClick={stopCamera} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.9)", cursor: "pointer", padding: "var(--fold-space-2)" }}>
+          <X size={24} />
         </button>
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-2)" }}>
-          <div style={{ width: 8, height: 8, borderRadius: "var(--fold-radius-full)", background: "#10B981" }} />
-          <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "var(--fold-type-subhead)" }}>1 scanner</span>
-        </div>
-        <div style={{ background: "var(--fold-info)", padding: "var(--fold-space-1) var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", color: "var(--fold-text-inverse)", fontSize: "var(--fold-type-subhead)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-          {scanCount} / {expectedCount}
+        <div style={{ background: "rgba(0,0,0,0.5)", padding: "var(--fold-space-1) var(--fold-space-3)", borderRadius: "var(--fold-radius-full)", color: "#fff", fontSize: "var(--fold-type-subhead)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+          {scanCount} captured
         </div>
       </div>
 
       {/* Bottom bar */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 var(--fold-space-8) var(--fold-space-8)" }}>
-        <button onClick={() => fileInputRef.current?.click()} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.8)", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--fold-space-1)", cursor: "pointer" }}>
-          <Upload size={24} />
-          <span style={{ fontSize: "var(--fold-type-caption)" }}>Upload</span>
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 0 var(--fold-space-10)" }}>
+        {/* Shutter button */}
+        <button
+          onClick={capturePhoto}
+          style={{
+            width: 72, height: 72, borderRadius: "var(--fold-radius-full)",
+            border: "4px solid rgba(255,255,255,0.8)", background: "transparent",
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "transform 100ms ease",
+          }}
+          onPointerDown={(e) => { (e.target as HTMLElement).style.transform = "scale(0.92)"; }}
+          onPointerUp={(e) => { (e.target as HTMLElement).style.transform = "scale(1)"; }}
+        >
+          <div style={{ width: 56, height: 56, borderRadius: "var(--fold-radius-full)", background: "rgba(255,255,255,0.95)" }} />
         </button>
-
-        <button onClick={capturePhoto} disabled={uploading} style={{ width: 72, height: 72, borderRadius: "var(--fold-radius-full)", border: "3px solid rgba(255,255,255,0.8)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: uploading ? 0.5 : 1 }}>
-          <div style={{ width: 56, height: 56, borderRadius: "var(--fold-radius-full)", background: "rgba(255,255,255,0.9)" }} />
-        </button>
-
-        <div style={{ width: 48 }} />
       </div>
 
-      <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={(e) => { if (e.target.files) Array.from(e.target.files).forEach((f) => uploadOrQueue(f, "gallery")); e.target.value = ""; }} style={{ display: "none" }} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={(e) => { if (e.target.files) handleGalleryUpload(e.target.files); e.target.value = ""; }}
+        style={{ display: "none" }}
+      />
     </div>
   );
 }
