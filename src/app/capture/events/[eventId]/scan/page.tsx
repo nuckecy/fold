@@ -84,13 +84,13 @@ export default function CaptureScanPage() {
     if (!ctx) return;
 
     // Crop to the viewfinder frame (matching the corner markers)
-    // Frame: top 20%, left 8%, right 8%, bottom 30%
+    // Frame: top 25%, left 5%, right 5%, bottom 35%
     const vw = v.videoWidth;
     const vh = v.videoHeight;
-    const cropX = Math.floor(vw * 0.08);
-    const cropY = Math.floor(vh * 0.20);
-    const cropW = Math.floor(vw * 0.84); // 1 - 0.08 - 0.08
-    const cropH = Math.floor(vh * 0.50); // 1 - 0.20 - 0.30
+    const cropX = Math.floor(vw * 0.05);
+    const cropY = Math.floor(vh * 0.25);
+    const cropW = Math.floor(vw * 0.90); // 1 - 0.05 - 0.05
+    const cropH = Math.floor(vh * 0.40); // 1 - 0.25 - 0.35
 
     c.width = cropW;
     c.height = cropH;
@@ -384,31 +384,31 @@ export default function CaptureScanPage() {
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
       {/* Dark overlay — top */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "20%", background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "25%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
       {/* Dark overlay — bottom */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "35%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
       {/* Dark overlay — left */}
-      <div style={{ position: "absolute", top: "20%", left: 0, width: "8%", bottom: "30%", background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "25%", left: 0, width: "5%", bottom: "35%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
       {/* Dark overlay — right */}
-      <div style={{ position: "absolute", top: "20%", right: 0, width: "8%", bottom: "30%", background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "25%", right: 0, width: "5%", bottom: "35%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
 
-      {/* Viewfinder border */}
-      <div style={{ position: "absolute", top: "20%", left: "8%", right: "8%", bottom: "30%", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: "var(--fold-radius-md)", pointerEvents: "none" }} />
+      {/* Viewfinder border — wide rectangle for cards */}
+      <div style={{ position: "absolute", top: "25%", left: "5%", right: "5%", bottom: "35%", border: "1.5px solid rgba(255,255,255,0.6)", borderRadius: "var(--fold-radius-sm)", pointerEvents: "none" }} />
 
       {/* Corner markers */}
-      <div style={{ position: "absolute", top: "20%", left: "8%", width: 24, height: 24, borderTop: "3px solid var(--fold-accent)", borderLeft: "3px solid var(--fold-accent)", borderRadius: "2px 0 0 0" }} />
-      <div style={{ position: "absolute", top: "20%", right: "8%", width: 24, height: 24, borderTop: "3px solid var(--fold-accent)", borderRight: "3px solid var(--fold-accent)", borderRadius: "0 2px 0 0" }} />
-      <div style={{ position: "absolute", bottom: "30%", left: "8%", width: 24, height: 24, borderBottom: "3px solid var(--fold-accent)", borderLeft: "3px solid var(--fold-accent)", borderRadius: "0 0 0 2px" }} />
-      <div style={{ position: "absolute", bottom: "30%", right: "8%", width: 24, height: 24, borderBottom: "3px solid var(--fold-accent)", borderRight: "3px solid var(--fold-accent)", borderRadius: "0 0 2px 0" }} />
+      <div style={{ position: "absolute", top: "25%", left: "5%", width: 28, height: 28, borderTop: "3px solid #fff", borderLeft: "3px solid #fff", borderRadius: "3px 0 0 0" }} />
+      <div style={{ position: "absolute", top: "25%", right: "5%", width: 28, height: 28, borderTop: "3px solid #fff", borderRight: "3px solid #fff", borderRadius: "0 3px 0 0" }} />
+      <div style={{ position: "absolute", bottom: "35%", left: "5%", width: 28, height: 28, borderBottom: "3px solid #fff", borderLeft: "3px solid #fff", borderRadius: "0 0 0 3px" }} />
+      <div style={{ position: "absolute", bottom: "35%", right: "5%", width: 28, height: 28, borderBottom: "3px solid #fff", borderRight: "3px solid #fff", borderRadius: "0 0 3px 0" }} />
 
       {/* Hint text or quality error */}
-      <div style={{ position: "absolute", top: "15%", left: 0, right: 0, textAlign: "center", zIndex: 10, padding: "0 var(--fold-space-5)" }}>
+      <div style={{ position: "absolute", top: "20%", left: 0, right: 0, textAlign: "center", zIndex: 10, padding: "0 var(--fold-space-5)" }}>
         {uploadError ? (
-          <div style={{ background: "rgba(192,57,43,0.9)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "#fff", animation: "fadeIn 200ms ease-out" }}>
+          <div style={{ background: "rgba(192,57,43,0.95)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "#fff", fontWeight: 500, animation: "fadeIn 200ms ease-out" }}>
             {uploadError}
           </div>
         ) : (
-          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "var(--fold-type-footnote)", fontWeight: 500 }}>
+          <span style={{ color: "#fff", fontSize: "var(--fold-type-footnote)", fontWeight: 600, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
             Align the card within the frame
           </span>
         )}
@@ -416,10 +416,10 @@ export default function CaptureScanPage() {
 
       {/* Top bar */}
       <div style={{ position: "relative", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "52px var(--fold-space-5) 0" }}>
-        <button onClick={stopCamera} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.9)", cursor: "pointer", padding: "var(--fold-space-2)" }}>
-          <X size={24} />
+        <button onClick={stopCamera} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: "var(--fold-space-2)" }}>
+          <X size={24} strokeWidth={2.5} />
         </button>
-        <div style={{ background: "rgba(0,0,0,0.5)", padding: "var(--fold-space-1) var(--fold-space-3)", borderRadius: "var(--fold-radius-full)", color: "#fff", fontSize: "var(--fold-type-subhead)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+        <div style={{ background: "rgba(0,0,0,0.6)", padding: "var(--fold-space-1) var(--fold-space-3)", borderRadius: "var(--fold-radius-full)", color: "#fff", fontSize: "var(--fold-type-subhead)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
           {scanCount} captured
         </div>
       </div>
