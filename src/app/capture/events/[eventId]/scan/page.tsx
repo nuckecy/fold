@@ -5,6 +5,7 @@ import { useRef, useState, useEffect } from "react";
 import { Upload, X, Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { checkImageQuality } from "@/lib/image-quality";
 
 type ScanPhase = "setup" | "camera" | "preview";
 
@@ -83,6 +84,15 @@ export default function CaptureScanPage() {
     c.height = v.videoHeight;
     c.getContext("2d")?.drawImage(v, 0, 0);
 
+    // ─── Client-side quality check (instant, free) ───────────────
+    const quality = checkImageQuality(c);
+    if (!quality.pass) {
+      setUploadError(quality.reason || "Image quality too low.");
+      // Brief flash of the error, then auto-dismiss after 2s
+      setTimeout(() => setUploadError(""), 2500);
+      return; // Don't proceed to preview — stay on camera
+    }
+
     // Generate preview URL
     const dataUrl = c.toDataURL("image/jpeg", 0.92);
     setPreviewUrl(dataUrl);
@@ -94,6 +104,7 @@ export default function CaptureScanPage() {
 
     // Pause the live feed (keep stream alive for retake)
     v.pause();
+    setUploadError("");
     setPhase("preview");
   }
 
@@ -370,11 +381,17 @@ export default function CaptureScanPage() {
       <div style={{ position: "absolute", bottom: "30%", left: "8%", width: 24, height: 24, borderBottom: "3px solid var(--fold-accent)", borderLeft: "3px solid var(--fold-accent)", borderRadius: "0 0 0 2px" }} />
       <div style={{ position: "absolute", bottom: "30%", right: "8%", width: 24, height: 24, borderBottom: "3px solid var(--fold-accent)", borderRight: "3px solid var(--fold-accent)", borderRadius: "0 0 2px 0" }} />
 
-      {/* Hint text */}
-      <div style={{ position: "absolute", top: "15%", left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
-        <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "var(--fold-type-footnote)", fontWeight: 500 }}>
-          Align the card within the frame
-        </span>
+      {/* Hint text or quality error */}
+      <div style={{ position: "absolute", top: "15%", left: 0, right: 0, textAlign: "center", zIndex: 10, padding: "0 var(--fold-space-5)" }}>
+        {uploadError ? (
+          <div style={{ background: "rgba(192,57,43,0.9)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "#fff", animation: "fadeIn 200ms ease-out" }}>
+            {uploadError}
+          </div>
+        ) : (
+          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "var(--fold-type-footnote)", fontWeight: 500 }}>
+            Align the card within the frame
+          </span>
+        )}
       </div>
 
       {/* Top bar */}
