@@ -383,8 +383,17 @@ export default function CaptureScanPage() {
       <video ref={videoRef} autoPlay playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      {/* Viewfinder rectangle */}
-      <div style={{ position: "absolute", top: "20%", left: "8%", right: "8%", bottom: "30%", border: "2px solid rgba(255,255,255,0.4)", borderRadius: "var(--fold-radius-md)", pointerEvents: "none" }} />
+      {/* Dark overlay — top */}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "20%", background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+      {/* Dark overlay — bottom */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+      {/* Dark overlay — left */}
+      <div style={{ position: "absolute", top: "20%", left: 0, width: "8%", bottom: "30%", background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+      {/* Dark overlay — right */}
+      <div style={{ position: "absolute", top: "20%", right: 0, width: "8%", bottom: "30%", background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+
+      {/* Viewfinder border */}
+      <div style={{ position: "absolute", top: "20%", left: "8%", right: "8%", bottom: "30%", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: "var(--fold-radius-md)", pointerEvents: "none" }} />
 
       {/* Corner markers */}
       <div style={{ position: "absolute", top: "20%", left: "8%", width: 24, height: 24, borderTop: "3px solid var(--fold-accent)", borderLeft: "3px solid var(--fold-accent)", borderRadius: "2px 0 0 0" }} />
