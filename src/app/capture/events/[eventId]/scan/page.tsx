@@ -83,14 +83,14 @@ export default function CaptureScanPage() {
     const ctx = c.getContext("2d");
     if (!ctx) return;
 
-    // Crop to the viewfinder frame (matching the corner markers)
-    // Frame: top 25%, left 5%, right 5%, bottom 35%
+    // Crop to the 16:9 viewfinder frame (matching the corner markers)
+    // Frame: top 18%, left 7.5%, right 7.5%, bottom 30.5%
     const vw = v.videoWidth;
     const vh = v.videoHeight;
-    const cropX = Math.floor(vw * 0.05);
-    const cropY = Math.floor(vh * 0.25);
-    const cropW = Math.floor(vw * 0.90); // 1 - 0.05 - 0.05
-    const cropH = Math.floor(vh * 0.40); // 1 - 0.25 - 0.35
+    const cropX = Math.floor(vw * 0.075);
+    const cropY = Math.floor(vh * 0.18);
+    const cropW = Math.floor(vw * 0.85); // 1 - 0.075 - 0.075
+    const cropH = Math.floor(vh * 0.515); // 1 - 0.18 - 0.305
 
     c.width = cropW;
     c.height = cropH;
@@ -383,26 +383,23 @@ export default function CaptureScanPage() {
       <video ref={videoRef} autoPlay playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      {/* Dark overlay — top */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "25%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
-      {/* Dark overlay — bottom */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "35%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
-      {/* Dark overlay — left */}
-      <div style={{ position: "absolute", top: "25%", left: 0, width: "5%", bottom: "35%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
-      {/* Dark overlay — right */}
-      <div style={{ position: "absolute", top: "25%", right: 0, width: "5%", bottom: "35%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
+      {/* Dark overlays around the 16:9 viewfinder — top 18%, bottom 30.5%, left/right 7.5% */}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "18%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30.5%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "18%", left: 0, width: "7.5%", bottom: "30.5%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "18%", right: 0, width: "7.5%", bottom: "30.5%", background: "rgba(0,0,0,0.6)", pointerEvents: "none" }} />
 
-      {/* Viewfinder border — wide rectangle for cards */}
-      <div style={{ position: "absolute", top: "25%", left: "5%", right: "5%", bottom: "35%", border: "1.5px solid rgba(255,255,255,0.6)", borderRadius: "var(--fold-radius-sm)", pointerEvents: "none" }} />
+      {/* Viewfinder — 85% width, ~16:9 landscape rectangle */}
+      <div style={{ position: "absolute", top: "18%", left: "7.5%", right: "7.5%", bottom: "30.5%", border: "1.5px solid rgba(255,255,255,0.6)", borderRadius: "var(--fold-radius-sm)", pointerEvents: "none" }} />
 
       {/* Corner markers */}
-      <div style={{ position: "absolute", top: "25%", left: "5%", width: 28, height: 28, borderTop: "3px solid #fff", borderLeft: "3px solid #fff", borderRadius: "3px 0 0 0" }} />
-      <div style={{ position: "absolute", top: "25%", right: "5%", width: 28, height: 28, borderTop: "3px solid #fff", borderRight: "3px solid #fff", borderRadius: "0 3px 0 0" }} />
-      <div style={{ position: "absolute", bottom: "35%", left: "5%", width: 28, height: 28, borderBottom: "3px solid #fff", borderLeft: "3px solid #fff", borderRadius: "0 0 0 3px" }} />
-      <div style={{ position: "absolute", bottom: "35%", right: "5%", width: 28, height: 28, borderBottom: "3px solid #fff", borderRight: "3px solid #fff", borderRadius: "0 0 3px 0" }} />
+      <div style={{ position: "absolute", top: "18%", left: "7.5%", width: 28, height: 28, borderTop: "3px solid #fff", borderLeft: "3px solid #fff", borderRadius: "3px 0 0 0" }} />
+      <div style={{ position: "absolute", top: "18%", right: "7.5%", width: 28, height: 28, borderTop: "3px solid #fff", borderRight: "3px solid #fff", borderRadius: "0 3px 0 0" }} />
+      <div style={{ position: "absolute", bottom: "30.5%", left: "7.5%", width: 28, height: 28, borderBottom: "3px solid #fff", borderLeft: "3px solid #fff", borderRadius: "0 0 0 3px" }} />
+      <div style={{ position: "absolute", bottom: "30.5%", right: "7.5%", width: 28, height: 28, borderBottom: "3px solid #fff", borderRight: "3px solid #fff", borderRadius: "0 0 3px 0" }} />
 
       {/* Hint text or quality error */}
-      <div style={{ position: "absolute", top: "20%", left: 0, right: 0, textAlign: "center", zIndex: 10, padding: "0 var(--fold-space-5)" }}>
+      <div style={{ position: "absolute", top: "13%", left: 0, right: 0, textAlign: "center", zIndex: 10, padding: "0 var(--fold-space-5)" }}>
         {uploadError ? (
           <div style={{ background: "rgba(192,57,43,0.95)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "#fff", fontWeight: 500, animation: "fadeIn 200ms ease-out" }}>
             {uploadError}

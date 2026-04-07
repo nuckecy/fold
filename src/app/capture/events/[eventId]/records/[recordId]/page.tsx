@@ -92,6 +92,7 @@ export default function CaptureRecordDetailPage() {
             <img
               src={record.imageUrl}
               alt="Scanned card"
+              crossOrigin="anonymous"
               style={{ width: "100%", height: "auto", maxHeight: 300, objectFit: "contain", display: "block" }}
               onError={() => setImgError(true)}
             />

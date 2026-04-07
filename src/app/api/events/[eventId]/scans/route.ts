@@ -84,7 +84,21 @@ export async function POST(
 
   const bytes = new Uint8Array(await file.arrayBuffer());
 
-  // Upload to R2 first (fast)
+  // Layer 2: AI pre-screening — reject non-card images before uploading
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const base64 = Buffer.from(bytes).toString("base64");
+      const screenCheck = await preScreenImage(base64, file.type);
+      if (!screenCheck.valid) {
+        return NextResponse.json({ error: screenCheck.reason, rejected: true }, { status: 422 });
+      }
+    } catch (e: any) {
+      console.error("[scans] Pre-screen error:", e?.message);
+      // Allow upload on screening failure
+    }
+  }
+
+  // Upload to R2 (fast)
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${crypto.randomUUID()}.${ext}`;
   const key = scanKey(eventId, filename);
