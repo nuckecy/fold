@@ -4,11 +4,8 @@ import { db } from "@/db";
 import { fldEvtMembers, fldEvtRecords } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { logActivity } from "@/services/activity-log";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { uploadFile, scanKey } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
-
-const UPLOAD_DIR = join(process.cwd(), "uploads", "scans");
 
 // GET /api/events/:eventId/scans — Get scan count
 export async function GET(
@@ -102,15 +99,11 @@ export async function POST(
   // UUID-based filename (N6: no original filenames preserved)
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${uuidv4()}.${ext}`;
+  const key = scanKey(eventId, filename);
 
-  // Ensure upload directory exists
-  await mkdir(join(UPLOAD_DIR, eventId), { recursive: true });
-
-  const filepath = join(UPLOAD_DIR, eventId, filename);
+  // Upload to R2
   const bytes = new Uint8Array(await file.arrayBuffer());
-  await writeFile(filepath, bytes);
-
-  const imageUrl = `/uploads/scans/${eventId}/${filename}`;
+  const imageUrl = await uploadFile(key, bytes, file.type);
 
   // Create record — one image = one record, always (D5)
   const [record] = await db

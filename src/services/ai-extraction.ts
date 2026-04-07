@@ -238,9 +238,15 @@ export async function extractFromImage(
     }))
   );
 
-  // Read image file
-  const fullPath = join(process.cwd(), imagePath);
-  const imageBuffer = await readFile(fullPath);
+  // Read image — supports both URLs (R2) and local paths
+  let imageBuffer: Buffer;
+  if (imagePath.startsWith("http")) {
+    const res = await fetch(imagePath);
+    imageBuffer = Buffer.from(await res.arrayBuffer());
+  } else {
+    const fullPath = join(process.cwd(), imagePath);
+    imageBuffer = await readFile(fullPath);
+  }
   const imageBase64 = imageBuffer.toString("base64");
   const mimeType = imagePath.endsWith(".png")
     ? "image/png"
