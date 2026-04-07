@@ -2,13 +2,13 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Camera, Info } from "lucide-react";
+import { Info, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 
 interface FieldData { id: string; fieldName: string; label: string; value: string | null; confidence: string | null; }
-interface RecordData { record: { id: string; captureMethod: string; status: string; imageUrl: string | null; defectiveReasons: string[]; }; fields: FieldData[]; editHistory: any[]; }
+interface RecordData { record: { id: string; captureMethod: string; status: string; imageUrl: string | null; defectiveReasons: string[]; createdAt: string; }; fields: FieldData[]; editHistory: any[]; }
 
 export default function CaptureRecordDetailPage() {
   const { eventId, recordId } = useParams<{ eventId: string; recordId: string }>();
@@ -17,6 +17,8 @@ export default function CaptureRecordDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     fetch(`/api/events/${eventId}/records/${recordId}`).then((r) => r.json()).then((d) => {
@@ -36,6 +38,31 @@ export default function CaptureRecordDetailPage() {
     router.push(`/capture/events/${eventId}/records?status=defective`);
   }
 
+  async function handleProcess() {
+    setProcessing(true);
+    try {
+      const res = await fetch(`/api/events/${eventId}/scans/extract`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recordId }),
+      });
+      const result = await res.json();
+      if (result.rejected) {
+        // Record was deleted — go back
+        router.push(`/capture/events/${eventId}/records?status=defective`);
+        return;
+      }
+      // Reload the page data
+      const r = await fetch(`/api/events/${eventId}/records/${recordId}`);
+      const d = await r.json();
+      setData(d);
+      const vals: Record<string, string> = {};
+      d.fields?.forEach((f: FieldData) => { vals[f.id] = f.value || ""; });
+      setEditValues(vals);
+    } catch {}
+    setProcessing(false);
+  }
+
   if (loading || !data) {
     return (
       <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
@@ -48,6 +75,7 @@ export default function CaptureRecordDetailPage() {
   }
 
   const { record, fields } = data;
+  const isUnprocessed = record.status === "captured" && fields.length === 0;
 
   return (
     <div style={{ background: "var(--fold-bg-grouped)", minHeight: "100%" }}>
@@ -59,21 +87,40 @@ export default function CaptureRecordDetailPage() {
 
       <div style={{ padding: "0 var(--fold-space-5)", display: "flex", flexDirection: "column", gap: "var(--fold-space-4)" }}>
         {/* Image preview */}
-        {record.imageUrl && (
+        {record.imageUrl && !imgError ? (
           <div style={{ borderRadius: "var(--fold-radius-md)", overflow: "hidden", border: "0.5px solid var(--fold-divider)", background: "var(--fold-bg-secondary)" }}>
             <img
               src={record.imageUrl}
               alt="Scanned card"
               style={{ width: "100%", height: "auto", maxHeight: 300, objectFit: "contain", display: "block" }}
+              onError={() => setImgError(true)}
             />
+          </div>
+        ) : record.imageUrl && imgError ? (
+          <div style={{ borderRadius: "var(--fold-radius-md)", border: "0.5px solid var(--fold-divider)", background: "var(--fold-bg-secondary)", padding: "var(--fold-space-6)", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--fold-space-2)" }}>
+            <ImageOff size={24} color="var(--fold-text-tertiary)" />
+            <span style={{ fontSize: "var(--fold-type-footnote)", color: "var(--fold-text-tertiary)" }}>Image could not be loaded</span>
+            <a href={record.imageUrl} target="_blank" rel="noopener" style={{ fontSize: "var(--fold-type-caption)", color: "var(--fold-accent)" }}>Open directly</a>
+          </div>
+        ) : null}
+
+        {/* Unprocessed — show Process button */}
+        {isUnprocessed && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--fold-space-3)" }}>
+            <div style={{ background: "var(--fold-warning-light)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-text-secondary)" }}>
+              This scan has not been processed yet. Tap below to extract data using AI.
+            </div>
+            <Button onClick={handleProcess} loading={processing}>
+              {processing ? "Processing..." : "Process with AI"}
+            </Button>
           </div>
         )}
 
         {/* Valid fields (read-only) */}
-        {fields.filter((f) => !record.defectiveReasons.some((r) => r.includes(f.fieldName || "")) && f.value).length > 0 && (
+        {fields.filter((f) => !record.defectiveReasons?.some((r) => r.includes(f.fieldName || "")) && f.value).length > 0 && (
           <div style={{ background: "var(--fold-bg)", borderRadius: "var(--fold-radius-md)", overflow: "hidden", boxShadow: "var(--fold-shadow-card)" }}>
             {fields
-              .filter((f) => !record.defectiveReasons.some((r) => r.includes(f.fieldName || "")) && f.value)
+              .filter((f) => !record.defectiveReasons?.some((r) => r.includes(f.fieldName || "")) && f.value)
               .map((field, i) => (
                 <div
                   key={field.id}
@@ -98,7 +145,7 @@ export default function CaptureRecordDetailPage() {
 
         {/* Defective fields (editable) */}
         {fields
-          .filter((f) => record.defectiveReasons.some((r) => r.includes(f.fieldName || "")) || !f.value)
+          .filter((f) => record.defectiveReasons?.some((r) => r.includes(f.fieldName || "")) || !f.value)
           .map((field) => (
             <div key={field.id}>
               <Input
@@ -123,17 +170,33 @@ export default function CaptureRecordDetailPage() {
         )}
 
         {/* Actions */}
-        <Button onClick={handleSave} loading={saving}>Save and resolve</Button>
+        {!isUnprocessed && fields.length > 0 && (
+          <>
+            <Button onClick={handleSave} loading={saving}>Save and resolve</Button>
+            <div style={{ textAlign: "center", paddingBottom: "var(--fold-space-6)" }}>
+              <button
+                onClick={() => router.push(`/capture/events/${eventId}/records?status=defective`)}
+                className="btn-text"
+                style={{ color: "var(--fold-text-secondary)" }}
+              >
+                Skip for now
+              </button>
+            </div>
+          </>
+        )}
 
-        <div style={{ textAlign: "center", paddingBottom: "var(--fold-space-6)" }}>
-          <button
-            onClick={() => router.push(`/capture/events/${eventId}/records?status=defective`)}
-            className="btn-text"
-            style={{ color: "var(--fold-text-secondary)" }}
-          >
-            Skip for now
-          </button>
-        </div>
+        {/* Back button for unprocessed */}
+        {isUnprocessed && !processing && (
+          <div style={{ textAlign: "center", paddingBottom: "var(--fold-space-6)" }}>
+            <button
+              onClick={() => router.push(`/capture/events/${eventId}/records?status=defective`)}
+              className="btn-text"
+              style={{ color: "var(--fold-text-secondary)" }}
+            >
+              Back to records
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

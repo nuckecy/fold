@@ -46,14 +46,23 @@ export async function POST(
     return NextResponse.json({ error: "Record not found" }, { status: 404 });
   }
 
-  // Get field schemas
-  const fieldSchemas = await db
+  // Get field schemas — auto-create default ones if none exist
+  let fieldSchemas = await db
     .select()
     .from(fldEvtFieldSchemas)
     .where(eq(fldEvtFieldSchemas.eventId, eventId));
 
   if (fieldSchemas.length === 0) {
-    return NextResponse.json({ error: "No field schemas configured. Set up fields first." }, { status: 400 });
+    // Auto-create default field schemas (name, email, phone)
+    const defaults = [
+      { fieldName: "full_name", fieldLabels: { en: "Full Name" }, fieldType: "text", isRequired: true, sortOrder: 0 },
+      { fieldName: "email", fieldLabels: { en: "Email" }, fieldType: "email", isRequired: true, sortOrder: 1 },
+      { fieldName: "phone", fieldLabels: { en: "Phone" }, fieldType: "phone", isRequired: false, sortOrder: 2 },
+    ];
+    for (const d of defaults) {
+      await db.insert(fldEvtFieldSchemas).values({ eventId, ...d });
+    }
+    fieldSchemas = await db.select().from(fldEvtFieldSchemas).where(eq(fldEvtFieldSchemas.eventId, eventId));
   }
 
   // Mark as processing

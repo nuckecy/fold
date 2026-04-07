@@ -29,7 +29,7 @@ export default function CaptureScanPage() {
   useEffect(() => {
     fetch(`/api/events/${eventId}/scans`)
       .then((r) => r.json())
-      .then((d) => setScanCount(d.total || 0))
+      .then((d) => setScanCount(Number(d.total) || 0))
       .catch(() => {});
   }, [eventId]);
 
