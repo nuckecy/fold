@@ -10,16 +10,18 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, back, badge, action }: PageHeaderProps) {
   return (
-    <div className="page-header">
+    <div className="page-header" style={{ padding: "var(--fold-space-4) var(--fold-space-5) var(--fold-space-3)" }}>
       {back && (
         <Link href={back} className="back">
           <ArrowLeft size={20} />
         </Link>
       )}
-      <span className="title">{title}</span>
-      {badge !== undefined && badge > 0 && (
-        <span className="badge">{badge}</span>
-      )}
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--fold-space-2)" }}>
+        {badge !== undefined && badge > 0 && (
+          <span className="badge">{badge}</span>
+        )}
+        <span className="title">{title}</span>
+      </div>
       {action}
     </div>
   );
