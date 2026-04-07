@@ -14,7 +14,8 @@ export default auth((req) => {
     pathname.startsWith("/api/scan/") ||    // Scanner join API
     pathname.startsWith("/api/unsubscribe") || // Unsubscribe API
     pathname.startsWith("/api/webhooks") || // Webhook endpoints
-    pathname.startsWith("/api/seed");       // Dev seed endpoint
+    pathname.startsWith("/api/seed") ||      // Dev seed endpoint
+    pathname.startsWith("/api/debug");      // Debug endpoints
 
   if (isPublic) return;
 

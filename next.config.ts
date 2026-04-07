@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://*.r2.dev",
+              "img-src 'self' data: blob: https://*.r2.dev https://pub-5fd5d9abbd3f4c76ba417dc007702166.r2.dev",
               "font-src 'self'",
               "connect-src 'self' https://*.r2.dev https://*.r2.cloudflarestorage.com https://generativelanguage.googleapis.com https://api.anthropic.com",
               "frame-ancestors 'none'",
