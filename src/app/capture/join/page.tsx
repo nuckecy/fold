@@ -13,17 +13,28 @@ export default function JoinSessionPage() {
   const [scanning, setScanning] = useState(false);
 
   async function startCamera() {
+    setError("");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError("Camera is not available. HTTPS is required for camera access on deployed apps.");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
       setScanning(true);
-    } catch {
-      setError("Camera access denied. Please allow camera permissions and try again.");
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError") {
+        setError("Camera permission denied. Please allow camera access in your browser settings.");
+      } else if (err?.name === "NotFoundError") {
+        setError("No camera found on this device.");
+      } else {
+        setError("Could not access camera. Please check permissions and try again.");
+      }
     }
   }
 

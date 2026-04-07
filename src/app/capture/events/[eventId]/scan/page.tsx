@@ -31,11 +31,26 @@ export default function CaptureScanPage() {
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
   }, [eventId]);
 
+  const [cameraError, setCameraError] = useState("");
+
   async function startCamera() {
+    setCameraError("");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError("Camera is not available. HTTPS is required for camera access on deployed apps.");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } });
       if (videoRef.current) { videoRef.current.srcObject = stream; setCameraActive(true); }
-    } catch { /* camera not available */ }
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError") {
+        setCameraError("Camera permission denied. Please allow camera access in your browser settings.");
+      } else if (err?.name === "NotFoundError") {
+        setCameraError("No camera found on this device.");
+      } else {
+        setCameraError("Could not access camera. Please check permissions or use gallery upload instead.");
+      }
+    }
   }
 
   function stopCamera() {
@@ -75,6 +90,11 @@ export default function CaptureScanPage() {
         <PageHeader title="Scan cards" back={`/capture/events/${eventId}`} />
 
         <div style={{ padding: "var(--fold-space-6) var(--fold-space-5)", display: "flex", flexDirection: "column", gap: "var(--fold-space-3)" }}>
+          {cameraError && (
+            <div style={{ background: "var(--fold-error-light)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "var(--fold-error)" }}>
+              {cameraError}
+            </div>
+          )}
           <Button onClick={startCamera}>Start scanning</Button>
 
           <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={(e) => { if (e.target.files) Array.from(e.target.files).forEach((f) => uploadOrQueue(f, "gallery")); e.target.value = ""; }} style={{ display: "none" }} />

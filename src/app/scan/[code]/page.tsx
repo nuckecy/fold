@@ -35,11 +35,26 @@ export default function ScannerJoinPage() {
     setPhase("scanning");
   }
 
+  const [cameraError, setCameraError] = useState("");
+
   async function startCamera() {
+    setCameraError("");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError("Camera is not available. HTTPS is required for camera access.");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } });
       if (videoRef.current) { videoRef.current.srcObject = stream; setCameraActive(true); }
-    } catch { /* */ }
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError") {
+        setCameraError("Camera permission denied. Please allow camera access.");
+      } else if (err?.name === "NotFoundError") {
+        setCameraError("No camera found on this device.");
+      } else {
+        setCameraError("Could not access camera. Check permissions or use gallery upload.");
+      }
+    }
   }
 
   async function capturePhoto() {
@@ -111,6 +126,11 @@ export default function ScannerJoinPage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--fold-space-4)", padding: "var(--fold-space-8)" }}>
           <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "var(--fold-type-headline)" }}>Ready to scan</p>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "var(--fold-type-subhead)", textAlign: "center" }}>Scanning as {email}</p>
+          {cameraError && (
+            <div style={{ background: "rgba(192,57,43,0.15)", padding: "var(--fold-space-3)", borderRadius: "var(--fold-radius-sm)", fontSize: "var(--fold-type-subhead)", color: "#E74C3C", textAlign: "center" }}>
+              {cameraError}
+            </div>
+          )}
           <button onClick={startCamera} style={{ padding: "var(--fold-space-3) var(--fold-space-8)", background: "var(--fold-info)", color: "var(--fold-text-inverse)", border: "none", borderRadius: "var(--fold-radius-md)", fontSize: "var(--fold-type-headline)", fontWeight: 500, cursor: "pointer" }}>
             Open camera
           </button>
