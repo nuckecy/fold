@@ -41,7 +41,11 @@ export default function CaptureScanPage() {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } });
-      if (videoRef.current) { videoRef.current.srcObject = stream; setCameraActive(true); }
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
+        setCameraActive(true);
+      }
     } catch (err: any) {
       if (err?.name === "NotAllowedError") {
         setCameraError("Camera permission denied. Please allow camera access in your browser settings.");

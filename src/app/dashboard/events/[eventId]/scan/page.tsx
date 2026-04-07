@@ -83,6 +83,7 @@ export default function ScanPage() {
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
         setCameraActive(true);
       }
     } catch {

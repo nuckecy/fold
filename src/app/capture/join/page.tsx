@@ -25,6 +25,7 @@ export default function JoinSessionPage() {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => { videoRef.current?.play(); };
       }
       setScanning(true);
     } catch (err: any) {
